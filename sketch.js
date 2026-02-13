@@ -40,37 +40,32 @@ function renderCMYKLayers() {
   svgWrapper.setAttribute('viewBox', `0 0 ${currentImageWidth} ${currentImageHeight}`);
   svgWrapper.style.backgroundColor = 'white';
 
-  // Define layers with colors and visibility
+  // Define layers with colors
   const layers = [
     {
       name: 'cyan',
       svg: result.cyan_svg,
-      color: 'rgb(0, 255, 255)',
-      visible: window.cmykParams.showCyan
+      color: 'rgb(0, 255, 255)'
     },
     {
       name: 'magenta',
       svg: result.magenta_svg,
-      color: 'rgb(255, 0, 255)',
-      visible: window.cmykParams.showMagenta
+      color: 'rgb(255, 0, 255)'
     },
     {
       name: 'yellow',
       svg: result.yellow_svg,
-      color: 'rgb(255, 255, 0)',
-      visible: window.cmykParams.showYellow
+      color: 'rgb(255, 255, 0)'
     },
     {
       name: 'black',
       svg: result.black_svg,
-      color: 'rgb(0, 0, 0)',
-      visible: window.cmykParams.showBlack
+      color: 'rgb(0, 0, 0)'
     }
   ];
 
   // Add each layer as a group
   layers.forEach(layer => {
-    if (!layer.visible) return;
 
     const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     group.setAttribute('class', `cmyk-layer ${layer.name}-layer`);

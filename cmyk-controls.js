@@ -15,12 +15,6 @@ window.cmykParams = {
   divisor_k: 25,
   skip_paths_longer_than: 25,
 
-  // Layer visibility
-  showCyan: true,
-  showMagenta: true,
-  showYellow: true,
-  showBlack: true,
-
   // Actions
   uploadImage: function() {
     document.getElementById('image-upload').click();
@@ -32,29 +26,11 @@ window.cmykParams = {
       showStatus('Please upload an image first', 'error');
     }
   },
-  exportCyan: function() {
-    if (window.cmykData) {
-      exportCMYKLayer(window.cmykData.result.cyan_svg, 'cyan.svg', 'cyan');
-    }
-  },
-  exportMagenta: function() {
-    if (window.cmykData) {
-      exportCMYKLayer(window.cmykData.result.magenta_svg, 'magenta.svg', 'magenta');
-    }
-  },
-  exportYellow: function() {
-    if (window.cmykData) {
-      exportCMYKLayer(window.cmykData.result.yellow_svg, 'yellow.svg', 'yellow');
-    }
-  },
-  exportBlack: function() {
-    if (window.cmykData) {
-      exportCMYKLayer(window.cmykData.result.black_svg, 'black.svg', 'black');
-    }
-  },
-  exportCombined: function() {
+  export: function() {
     if (window.cmykData) {
       exportCombinedCMYK(window.cmykData.result, 'cmyk-combined.svg');
+    } else {
+      showStatus('Please upload an image first', 'error');
     }
   }
 };
@@ -65,45 +41,15 @@ window.cmykParams = {
 function setupCMYKGUI() {
   const gui = new dat.GUI();
 
-  // Upload section
-  const uploadFolder = gui.addFolder('Upload');
-  uploadFolder.add(cmykParams, 'uploadImage').name('📁 Select Image');
-  uploadFolder.open();
-
-  // Processing parameters
-  const processFolder = gui.addFolder('Processing Parameters');
-  processFolder.add(cmykParams, 'divisor_c', 10, 200, 1).name('Cyan Divisor');
-  processFolder.add(cmykParams, 'divisor_m', 10, 200, 1).name('Magenta Divisor');
-  processFolder.add(cmykParams, 'divisor_y', 10, 200, 1).name('Yellow Divisor');
-  processFolder.add(cmykParams, 'divisor_k', 10, 200, 1).name('Black Divisor');
-  processFolder.add(cmykParams, 'skip_paths_longer_than', 5, 100, 1).name('Skip Paths >');
-  processFolder.add(cmykParams, 'reprocess').name('🔄 Reprocess');
-  processFolder.open();
-
-  // Layer visibility
-  const visibilityFolder = gui.addFolder('Layer Visibility');
-  visibilityFolder.add(cmykParams, 'showCyan').name('Show Cyan').onChange(() => {
-    if (typeof redraw === 'function') redraw();
-  });
-  visibilityFolder.add(cmykParams, 'showMagenta').name('Show Magenta').onChange(() => {
-    if (typeof redraw === 'function') redraw();
-  });
-  visibilityFolder.add(cmykParams, 'showYellow').name('Show Yellow').onChange(() => {
-    if (typeof redraw === 'function') redraw();
-  });
-  visibilityFolder.add(cmykParams, 'showBlack').name('Show Black').onChange(() => {
-    if (typeof redraw === 'function') redraw();
-  });
-  visibilityFolder.open();
-
-  // Export section
-  const exportFolder = gui.addFolder('Export');
-  exportFolder.add(cmykParams, 'exportCyan').name('Export Cyan');
-  exportFolder.add(cmykParams, 'exportMagenta').name('Export Magenta');
-  exportFolder.add(cmykParams, 'exportYellow').name('Export Yellow');
-  exportFolder.add(cmykParams, 'exportBlack').name('Export Black');
-  exportFolder.add(cmykParams, 'exportCombined').name('Export Combined');
-  exportFolder.open();
+  // All controls at top level
+  gui.add(cmykParams, 'uploadImage').name('📁 Select Image');
+  gui.add(cmykParams, 'divisor_c', 10, 200, 1).name('Cyan Divisor');
+  gui.add(cmykParams, 'divisor_m', 10, 200, 1).name('Magenta Divisor');
+  gui.add(cmykParams, 'divisor_y', 10, 200, 1).name('Yellow Divisor');
+  gui.add(cmykParams, 'divisor_k', 10, 200, 1).name('Black Divisor');
+  gui.add(cmykParams, 'skip_paths_longer_than', 5, 100, 1).name('Skip Paths >');
+  gui.add(cmykParams, 'reprocess').name('🔄 Reprocess');
+  gui.add(cmykParams, 'export').name('💾 Export SVG');
 }
 
 /**
@@ -127,8 +73,7 @@ function initializeCMYKControls() {
 async function checkBackendHealth() {
   try {
     await window.apiClient.healthCheck();
-    showStatus('Backend connected ✓', 'success');
-    setTimeout(() => showStatus('', ''), 2000);
+    // Silently succeed - only show error if backend fails
   } catch (error) {
     showStatus('Backend not available. Start server with: uvicorn backend.main:app --reload --port 8000', 'error');
   }
