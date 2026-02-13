@@ -10,6 +10,7 @@ from typing import Optional
 from backend.services.cmyk_splitter import CMYKSplitter
 from backend.services.halftone_dots import HalftoneDotPlotter
 from backend.services.svg_combiner import SVGCombiner
+from backend.config import DEBUG, DEBUG_DIR
 
 router = APIRouter()
 
@@ -49,36 +50,38 @@ async def process_image(
         # Store original dimensions
         original_width, original_height = pil_image.size
 
-        print(f"Processing image: {original_width}x{original_height}")
-
-        # Debug: Save raw CMYK channels before thresholding
-        debug_dir = "backend/services/debug_files"
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        if DEBUG:
+            print(f"Processing image: {original_width}x{original_height}")
 
         # Convert to RGB if not already
         if pil_image.mode != 'RGB':
             pil_image = pil_image.convert('RGB')
 
-        # Convert RGB to CMYK with GCR
-        splitter = CMYKSplitter()
-        c, m, y, k = splitter.rgb_to_cmyk_with_gcr(pil_image)
-
-        print(f"Saving debug files to {debug_dir}/")
-        # Save raw CMYK channels (grayscale, 0=full ink, 255=no ink)
-        c.save(os.path.join(debug_dir, f"{timestamp}_raw_cyan.png"))
-        m.save(os.path.join(debug_dir, f"{timestamp}_raw_magenta.png"))
-        y.save(os.path.join(debug_dir, f"{timestamp}_raw_yellow.png"))
-        k.save(os.path.join(debug_dir, f"{timestamp}_raw_black.png"))
-        print(f"  Saved raw CMYK channel images")
-
         # Split into CMYK channels (with thresholding)
+        splitter = CMYKSplitter()
         channels = splitter.split_channels(pil_image)
 
-        # Save bilevel channel images
-        for channel_name, channel_img in channels.items():
-            debug_path = os.path.join(debug_dir, f"{timestamp}_bilevel_{channel_name}.png")
-            channel_img.save(debug_path)
-            print(f"  Saved bilevel {channel_name} image: {debug_path}")
+        # Debug: Save raw CMYK channels and bilevel images
+        if DEBUG:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+            # Convert RGB to CMYK with GCR for debug output
+            c, m, y, k = splitter.rgb_to_cmyk_with_gcr(pil_image)
+
+            print(f"Saving debug files to {DEBUG_DIR}/")
+
+            # Save raw CMYK channels (grayscale, 0=full ink, 255=no ink)
+            c.save(os.path.join(DEBUG_DIR, f"{timestamp}_raw_cyan.png"))
+            m.save(os.path.join(DEBUG_DIR, f"{timestamp}_raw_magenta.png"))
+            y.save(os.path.join(DEBUG_DIR, f"{timestamp}_raw_yellow.png"))
+            k.save(os.path.join(DEBUG_DIR, f"{timestamp}_raw_black.png"))
+            print(f"  Saved raw CMYK channel images")
+
+            # Save bilevel channel images
+            for channel_name, channel_img in channels.items():
+                debug_path = os.path.join(DEBUG_DIR, f"{timestamp}_bilevel_{channel_name}.png")
+                channel_img.save(debug_path)
+                print(f"  Saved bilevel {channel_name} image: {debug_path}")
 
         # Process each channel with HalftoneDotPlotter
         channel_configs = {
@@ -90,10 +93,10 @@ async def process_image(
 
         svg_results = {}
         for channel_name, divisor in channel_configs.items():
-            # print(f"Processing {channel_name} channel (divisor={divisor})...")
+            if DEBUG:
+                print(f"Processing {channel_name} channel (divisor={divisor})...")
 
             # Using HalftoneDotPlotter for simple halftone visualization
-            # TODO: Switch to StringyPlotter for continuous line drawings
             plotter = HalftoneDotPlotter(
                 divisor=divisor,
                 dot_size=10.0,     # Large dots for visibility
@@ -103,11 +106,12 @@ async def process_image(
             svg_results[f"{channel_name}_svg"] = svg_string
 
             # Debug: Save SVG files
-            svg_debug_path = os.path.join(debug_dir, f"{timestamp}_{channel_name}.svg")
-            with open(svg_debug_path, 'w') as f:
-                f.write(svg_string)
-            print(f"  Saved {channel_name} SVG: {svg_debug_path}")
-            print(f"  SVG length: {len(svg_string)} chars")
+            if DEBUG:
+                svg_debug_path = os.path.join(DEBUG_DIR, f"{timestamp}_{channel_name}.svg")
+                with open(svg_debug_path, 'w') as f:
+                    f.write(svg_string)
+                print(f"  Saved {channel_name} SVG: {svg_debug_path}")
+                print(f"  SVG length: {len(svg_string)} chars")
 
         # Combine all channel SVGs into a single layered SVG
         combined_svg = SVGCombiner.combine_cmyk_layers(
@@ -120,7 +124,9 @@ async def process_image(
         )
 
         # Return response
-        print(f"Processing complete! Files saved in {debug_dir}/")
+        if DEBUG:
+            print(f"Processing complete! Files saved in {DEBUG_DIR}/")
+
         return {
             "status": "completed",
             "result": {

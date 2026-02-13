@@ -1,8 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.api import routes
+from backend.config import DEBUG
 
 app = FastAPI(title="CMYK Splitter API")
+
+# Log debug mode status on startup
+@app.on_event("startup")
+async def startup_event():
+    if DEBUG:
+        print("=" * 50)
+        print("DEBUG MODE ENABLED")
+        print("Verbose logging and debug file output active")
+        print("=" * 50)
 
 # Configure CORS for frontend access
 app.add_middleware(

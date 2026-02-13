@@ -1,21 +1,21 @@
 # CMYK Splitter
 
-A web application that converts images into CMYK color-separated "stringy" SVG drawings suitable for pen plotting. Upload an image and get four continuous-line SVG layers (Cyan, Magenta, Yellow, Black) that can be plotted individually or combined.
+A web application that converts images into CMYK color-separated halftone SVG drawings suitable for pen plotting. Upload an image and get a layered SVG with four color channels (Cyan, Magenta, Yellow, Black) that can be plotted or edited.
 
 ## Features
 
-- **CMYK Color Separation** - Automatically splits images into 4 color channels
-- **Continuous Line Algorithm** - Converts each channel into a single continuous path using nearest-neighbor traversal
+- **CMYK Color Separation with GCR** - Properly splits images into 4 color channels with Gray Component Replacement
+- **Halftone Dot Visualization** - Converts each channel into stippled dots for clean plotting
 - **Per-Channel Control** - Independent divisor settings for each color (C/M/Y default: 50, K default: 25 for finer detail)
-- **Layer Visibility** - Toggle each CMYK layer on/off in real-time preview
-- **Multiple Export Options** - Export individual channels or combined SVG
-- **Real-Time Preview** - See all 4 colored layers overlaid with proper transparency
+- **Layered SVG Output** - Single SVG file with separate groups for each color channel
+- **Real-Time Preview** - See all 4 colored layers overlaid with proper multiply blend mode
+- **Easy Export** - Download combined SVG with all layers preserved
 
 ## Architecture
 
-- **Backend**: FastAPI (Python) - Handles CMYK splitting and stringy path generation
-- **Frontend**: p5.js + dat.GUI - Interactive visualization and controls
-- **Image Processing**: PIL/Pillow for CMYK conversion, SciPy for nearest-neighbor path finding
+- **Backend**: FastAPI (Python) - Handles CMYK splitting with GCR and halftone dot generation
+- **Frontend**: Vanilla JavaScript + dat.GUI - Interactive visualization and controls
+- **Image Processing**: PIL/Pillow + NumPy for CMYK conversion with GCR, random dot sampling
 
 ## Setup
 
@@ -67,6 +67,23 @@ INFO:     Uvicorn running on http://127.0.0.1:8000
 INFO:     Application startup complete.
 ```
 
+**Debug Mode (Optional):**
+
+To enable debug mode with verbose logging and file output:
+
+```bash
+# Set DEBUG environment variable before starting the server
+DEBUG=1 uvicorn backend.main:app --reload --port 8000
+```
+
+When debug mode is enabled, the backend will:
+- Print detailed processing information to console
+- Save raw CMYK channel images (before thresholding) to `backend/services/debug_files/`
+- Save bilevel channel images (after thresholding) to `backend/services/debug_files/`
+- Save individual channel SVG files to `backend/services/debug_files/`
+
+All debug files are timestamped (format: `YYYYMMDD_HHMMSS_*`)
+
 ### Terminal 2: Start Frontend Server
 
 ```bash
@@ -90,26 +107,23 @@ Navigate to `http://localhost:8080` in your web browser.
    - Wait for processing (status shown in top-left panel)
 
 2. **View Results**
-   - Four CMYK layers will appear on canvas with colors:
-     - Cyan: `#00FFFF` (light blue, semi-transparent)
-     - Magenta: `#FF00FF` (purple-pink, semi-transparent)
-     - Yellow: `#FFFF00` (yellow, semi-transparent)
-     - Black: `#000000` (black, opaque)
+   - Four CMYK layers will appear with colors:
+     - Cyan: `rgb(0, 255, 255)`
+     - Magenta: `rgb(255, 0, 255)`
+     - Yellow: `rgb(255, 255, 0)`
+     - Black: `rgb(0, 0, 0)`
+   - All layers use multiply blend mode for proper color mixing
 
 3. **Adjust Parameters**
-   - **Divisor Sliders** - Control point density per channel (higher = fewer points, faster)
+   - **Divisor Sliders** - Control dot density per channel (higher = fewer dots, faster)
      - Cyan/Magenta/Yellow: 10-200 (default 50)
      - Black: 10-200 (default 25 for more detail)
-   - **Skip Paths >** - Max distance for continuous lines (5-100, default 25)
    - Click "🔄 Reprocess" to regenerate with new settings
 
-4. **Toggle Layer Visibility**
-   - Use checkboxes to show/hide individual channels
-   - Useful for inspecting individual color separations
-
-5. **Export SVG Files**
-   - **Export Cyan/Magenta/Yellow/Black** - Download individual channel as SVG
-   - **Export Combined** - Download all 4 layers in one SVG file
+4. **Export SVG File**
+   - Click "Export SVG" to download combined SVG with all 4 layers
+   - Each layer is in a separate group (cyan-layer, magenta-layer, yellow-layer, black-layer)
+   - SVG preserves original image dimensions
 
 ## API Endpoints
 
@@ -124,29 +138,34 @@ Health check endpoint
 ```
 
 ### `POST /api/process-image`
-Process image into CMYK stringy SVG layers
+Process image into CMYK halftone SVG with layered output
 
 **Request:**
 - Content-Type: `multipart/form-data`
 - Body:
   - `image`: File (JPEG, PNG, GIF)
-  - `divisor_c`: int (default 50)
-  - `divisor_m`: int (default 50)
-  - `divisor_y`: int (default 50)
-  - `divisor_k`: int (default 25)
-  - `skip_paths_longer_than`: int (default 25)
+  - `divisor_c`: int (default 50) - Cyan dot density
+  - `divisor_m`: int (default 50) - Magenta dot density
+  - `divisor_y`: int (default 50) - Yellow dot density
+  - `divisor_k`: int (default 25) - Black dot density
+  - `skip_paths_longer_than`: int (default 25) - Unused for dot plotter
 
 **Response (200 OK):**
 ```json
 {
   "status": "completed",
   "result": {
-    "cyan_svg": "<svg width=\"800\" height=\"600\">...</svg>",
-    "magenta_svg": "<svg width=\"800\" height=\"600\">...</svg>",
-    "yellow_svg": "<svg width=\"800\" height=\"600\">...</svg>",
-    "black_svg": "<svg width=\"800\" height=\"600\">...</svg>",
+    "combined_svg": "<svg width=\"1686\" height=\"2411\" xmlns=\"...\">
+      <g id=\"cyan-layer\" style=\"mix-blend-mode: multiply;\">
+        <circle cx=\"...\" cy=\"...\" r=\"...\" fill=\"rgb(0, 255, 255)\" />
+        ...
+      </g>
+      <g id=\"magenta-layer\" style=\"mix-blend-mode: multiply;\">...</g>
+      <g id=\"yellow-layer\" style=\"mix-blend-mode: multiply;\">...</g>
+      <g id=\"black-layer\" style=\"mix-blend-mode: multiply;\">...</g>
+    </svg>",
     "metadata": {
-      "original_dimensions": [800, 600]
+      "original_dimensions": [1686, 2411]
     }
   }
 }
@@ -161,14 +180,15 @@ cmyk-splitter/
 │   ├── api/
 │   │   └── routes.py           # API endpoints
 │   └── services/
-│       ├── cmyk_splitter.py    # CMYK channel splitting
-│       └── stringy_plotter.py  # Continuous line path generation
-├── flowers/                     # Original Python CLI script (reference)
-├── lib/                        # Frontend libraries (p5.js, dat.GUI, paper.js)
+│       ├── cmyk_splitter.py    # CMYK channel splitting with GCR
+│       ├── halftone_dots.py    # Halftone dot plotter
+│       ├── svg_combiner.py     # Combines channel SVGs into layered output
+│       └── stringy_plotter.py  # Continuous line path generation (alternative)
+├── lib/                        # Frontend libraries (dat.GUI)
 ├── api-client.js               # Frontend API communication
 ├── cmyk-controls.js            # dat.GUI controls
 ├── index.html                  # Main HTML page
-├── sketch.js                   # p5.js sketch & CMYK visualization
+├── sketch.js                   # CMYK visualization
 ├── style.css                   # Styling
 ├── svgtools.js                 # SVG export utilities
 ├── requirements.txt            # Python dependencies
@@ -177,23 +197,27 @@ cmyk-splitter/
 
 ## Algorithm Details
 
-### CMYK Splitting
-1. Convert RGB image to CMYK color space using PIL
-2. Split into 4 separate channels (C, M, Y, K)
-3. Apply thresholds to create bilevel (black/white) images:
-   - Cyan, Magenta, Black: 50% threshold (127/255)
+### CMYK Splitting with GCR
+1. Convert RGB to CMY: `C = 1-R, M = 1-G, Y = 1-B`
+2. Calculate K (gray component): `K = min(C, M, Y)`
+3. Extract gray from CMY (Gray Component Replacement):
+   - `C = (C - K) / (1 - K)`
+   - `M = (M - K) / (1 - K)`
+   - `Y = (Y - K) / (1 - K)`
+4. Apply thresholds to create bilevel (black/white) images:
+   - Cyan: 50% threshold (127/255)
+   - Magenta: 50% threshold (127/255)
    - Yellow: 65% threshold (165/255) - yellows need special handling
+   - Black: 50% threshold (127/255)
 
-### Stringy Plotter
-1. Extract all black pixels from bilevel image
-2. Randomly sample pixels based on divisor (e.g., every 50th pixel)
-3. Connect sampled points using **greedy nearest-neighbor traversal**:
-   - Start with first point
-   - Find closest unvisited point
-   - Connect and repeat
-4. Generate SVG path with M (move) and L (line) commands:
-   - Use L (line) for distances ≤ threshold
-   - Use M (move) for distances > threshold (lifts pen, breaks line)
+### Halftone Dot Plotter
+1. Extract white pixels (ink areas) from bilevel image
+2. Randomly sample pixels up to max_dots (default 2000)
+3. Place SVG circles at sampled positions
+4. Combine all channel SVGs into single layered output with:
+   - Separate groups for each color
+   - Proper RGB colors applied
+   - Multiply blend mode for color mixing
 
 ## Troubleshooting
 
@@ -208,25 +232,22 @@ cmyk-splitter/
 - Try accessing `http://localhost:8000/health` directly
 
 ### Processing is slow
-- Increase divisor values (fewer points = faster processing)
-- Use smaller images (StringyPlotter is O(n²) with number of points)
+- Increase divisor values (fewer dots = faster processing)
+- HalftoneDotPlotter has a hard cap of 2000 dots per channel by default
 - Black channel typically needs lower divisor (more detail) than other channels
-
-### Python 3.14 installation errors
-- Use Python 3.12 or 3.11 instead (pre-built wheels available)
-- NumPy and Pillow don't have wheels for Python 3.14 yet
 
 ## Development Notes
 
 - Backend uses **FastAPI** with async/await for potential future enhancements
 - Frontend is purely static - no build step required
 - CORS enabled for `localhost:8080` - update `backend/main.py` for other ports
-- Spiral demo code kept in `sketch.js` as fallback (shows when no image uploaded)
+- GCR (Gray Component Replacement) implemented in pure Python using NumPy
+- Debug mode can be enabled with `DEBUG=1` environment variable - see "Running the Application" section
 
 ## Credits
 
-- Original StringyPlotter algorithm by [th0ma5w](https://github.com/th0ma5w/StringyPlotter)
-- Built with [p5.js](https://p5js.org/), [FastAPI](https://fastapi.tiangolo.com/), and [Pillow](https://python-pillow.org/)
+- Built with [FastAPI](https://fastapi.tiangolo.com/), [Pillow](https://python-pillow.org/), and [NumPy](https://numpy.org/)
+- dat.GUI for controls
 
 ## License
 
