@@ -1,10 +1,13 @@
-const width = 700;
-const height = 700;
+let canvasWidth = 800;
+let canvasHeight = 800;
+let scaleFactor = 1;
+let imageWidth = 800;
+let imageHeight = 800;
 
 function setup() {
   // Use default canvas renderer (supports blend modes) instead of SVG
   // SVG export works directly from API data, doesn't need SVG canvas
-  const canvas = createCanvas(width, height);
+  const canvas = createCanvas(canvasWidth, canvasHeight);
   canvas.parent(select('div[p5]'));
 
   background(255); // White background
@@ -20,7 +23,28 @@ function draw() {
 
   // Render CMYK layers if available
   if (window.cmykData) {
+    updateCanvasSize();
     drawCMYKLayers();
+  }
+}
+
+function updateCanvasSize() {
+  // Get original image dimensions from API response
+  const metadata = window.cmykData.result.metadata;
+  imageWidth = metadata.original_dimensions[0];
+  imageHeight = metadata.original_dimensions[1];
+
+  // Calculate scale to fit in max 800px while maintaining aspect ratio
+  const maxSize = 800;
+  const scale = Math.min(maxSize / imageWidth, maxSize / imageHeight);
+
+  scaleFactor = scale;
+  canvasWidth = imageWidth * scale;
+  canvasHeight = imageHeight * scale;
+
+  // Resize canvas if dimensions changed
+  if (width !== canvasWidth || height !== canvasHeight) {
+    resizeCanvas(canvasWidth, canvasHeight);
   }
 }
 
@@ -38,6 +62,10 @@ function drawCMYKLayers() {
     { svg: result.black_svg, color: [0, 0, 0], visible: cmykParams.showBlack }
   ];
 
+  // Apply scaling to fit canvas
+  push();
+  scale(scaleFactor);
+
   // Use multiply blend mode for authentic CMYK appearance
   blendMode(MULTIPLY);
 
@@ -54,6 +82,8 @@ function drawCMYKLayers() {
 
   // Reset blend mode
   blendMode(BLEND);
+
+  pop();
 }
 
 /**
