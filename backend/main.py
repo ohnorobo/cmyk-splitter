@@ -15,14 +15,15 @@ async def startup_event():
         print("=" * 50)
 
 # Configure CORS for frontend access
-# TODO: Replace <username> and <repo-name> with your GitHub username and repository name
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:8080",
         "http://127.0.0.1:8080",
+        # gh-pages origin
         "https://ohnorobo.github.io",
-        # For development/testing, you can temporarily use "*" but don't use in production
+        # Allow gh-pages custom domain
+        "https://sarahlaplante.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
