@@ -9,6 +9,7 @@ from typing import Optional
 
 from backend.services.cmyk_splitter import CMYKSplitter
 from backend.services.halftone_dots import HalftoneDotPlotter
+from backend.services.svg_combiner import SVGCombiner
 
 router = APIRouter()
 
@@ -93,12 +94,22 @@ async def process_image(
             # print(f"  Saved {channel_name} SVG: {svg_debug_path}")
             # print(f"  SVG length: {len(svg_string)} chars")
 
+        # Combine all channel SVGs into a single layered SVG
+        combined_svg = SVGCombiner.combine_cmyk_layers(
+            cyan_svg=svg_results["cyan_svg"],
+            magenta_svg=svg_results["magenta_svg"],
+            yellow_svg=svg_results["yellow_svg"],
+            black_svg=svg_results["black_svg"],
+            width=original_width,
+            height=original_height
+        )
+
         # Return response
         # print(f"Processing complete! Files saved in {debug_dir}/")
         return {
             "status": "completed",
             "result": {
-                **svg_results,
+                "combined_svg": combined_svg,
                 "metadata": {
                     "original_dimensions": [original_width, original_height]
                 },

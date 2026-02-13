@@ -33,65 +33,20 @@ function renderCMYKLayers() {
   const displayWidth = currentImageWidth * scale;
   const displayHeight = currentImageHeight * scale;
 
-  // Create wrapper SVG with all layers
-  const svgWrapper = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svgWrapper.setAttribute('width', displayWidth);
-  svgWrapper.setAttribute('height', displayHeight);
-  svgWrapper.setAttribute('viewBox', `0 0 ${currentImageWidth} ${currentImageHeight}`);
-  svgWrapper.style.backgroundColor = 'white';
+  // Parse the combined SVG
+  const parser = new DOMParser();
+  const svgDoc = parser.parseFromString(result.combined_svg, 'image/svg+xml');
+  const svgElement = svgDoc.documentElement;
 
-  // Define layers with colors
-  const layers = [
-    {
-      name: 'cyan',
-      svg: result.cyan_svg,
-      color: 'rgb(0, 255, 255)'
-    },
-    {
-      name: 'magenta',
-      svg: result.magenta_svg,
-      color: 'rgb(255, 0, 255)'
-    },
-    {
-      name: 'yellow',
-      svg: result.yellow_svg,
-      color: 'rgb(255, 255, 0)'
-    },
-    {
-      name: 'black',
-      svg: result.black_svg,
-      color: 'rgb(0, 0, 0)'
-    }
-  ];
+  // Set display dimensions with viewBox for proper scaling
+  svgElement.setAttribute('width', displayWidth);
+  svgElement.setAttribute('height', displayHeight);
+  svgElement.setAttribute('viewBox', `0 0 ${currentImageWidth} ${currentImageHeight}`);
+  svgElement.style.backgroundColor = 'white';
 
-  // Add each layer as a group
-  layers.forEach(layer => {
-
-    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    group.setAttribute('class', `cmyk-layer ${layer.name}-layer`);
-    group.style.mixBlendMode = 'multiply';
-
-    // Parse the SVG string and extract circles
-    const parser = new DOMParser();
-    const svgDoc = parser.parseFromString(layer.svg, 'image/svg+xml');
-    const circles = svgDoc.querySelectorAll('circle');
-
-    // Copy circles to the group with appropriate color
-    circles.forEach(circle => {
-      const newCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      newCircle.setAttribute('cx', circle.getAttribute('cx'));
-      newCircle.setAttribute('cy', circle.getAttribute('cy'));
-      newCircle.setAttribute('r', circle.getAttribute('r'));
-      newCircle.setAttribute('fill', layer.color);
-      group.appendChild(newCircle);
-    });
-
-    svgWrapper.appendChild(group);
-  });
-
-  // Clear container and add new SVG
+  // Clear container and add SVG
   container.innerHTML = '';
-  container.appendChild(svgWrapper);
+  container.appendChild(svgElement);
 }
 
 /**

@@ -170,7 +170,7 @@ cmyk-splitter/
 ├── index.html                  # Main HTML page
 ├── sketch.js                   # p5.js sketch & CMYK visualization
 ├── style.css                   # Styling
-├── p5tools.js                  # SVG export utilities
+├── svgtools.js                 # SVG export utilities
 ├── requirements.txt            # Python dependencies
 └── README.md                   # This file
 ```
