@@ -12,8 +12,7 @@ class CMYKAPIClient {
       this.baseURL = 'http://localhost:8000';
     } else {
       // Running on GitHub Pages - use deployed backend
-      // TODO: Replace with your actual Render URL
-      this.baseURL = 'https://cmyk-splitter-api.onrender.com';
+      this.baseURL = 'https://cmyk-splitter.onrender.com';
     }
   }
 
