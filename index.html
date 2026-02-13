@@ -2,13 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>p5 SVG Exporter</title>
+  <title>CMYK Splitter</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header>
-  <h1>p5 SVG Exporter</h1>
+  <h1>CMYK Splitter</h1>
 </header>
+
+<!-- Upload section -->
+<div id="upload-section">
+  <input type="file" id="image-upload" accept="image/*">
+  <div id="preview-container"></div>
+  <div id="status-message"></div>
+</div>
 
 <!-- p5 canvas will go here -->
 <div p5></div>
@@ -19,7 +26,11 @@
 <script src="lib/paper.js"></script>
 
 <!-- utility functionss -->
-<script src="p5tools.js"></script>   
+<script src="p5tools.js"></script>
+<!-- API client -->
+<script src="api-client.js"></script>
+<!-- CMYK controls -->
+<script src="cmyk-controls.js"></script>
 <!-- Your sketch file -->
 <script src="sketch.js"></script>
 

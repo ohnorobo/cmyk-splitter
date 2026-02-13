@@ -21,18 +21,22 @@ function setup() {
   noFill();
   stroke(0);
 
-  setupGUI();
+  setupCMYKGUI();
 }
 
 function draw() {
-  strokeWeight(params.lineWeight);
-
   clear(); // clear canvas for SVG redraw
 
-  drawShapeInsideBorder(drawSpiral);
-
-  if (params.drawRegistrationMark) {
-    drawRegistrationMark();
+  // If we have CMYK data, render it
+  if (window.cmykData) {
+    drawCMYKLayers();
+  } else {
+    // Otherwise show the spiral demo
+    strokeWeight(params.lineWeight);
+    drawShapeInsideBorder(drawSpiral);
+    if (params.drawRegistrationMark) {
+      drawRegistrationMark();
+    }
   }
 }
 
@@ -76,6 +80,66 @@ let params = {
   drawRegistrationMark: true,
   exportSVG: function() { exportCurrentSVG('spiral.svg'); }
 };
+
+/**
+ * Draw CMYK layers from API response
+ */
+function drawCMYKLayers() {
+  if (!window.cmykData || !window.cmykData.result) return;
+
+  const result = window.cmykData.result;
+  const layers = [
+    { svg: result.cyan_svg, color: [0, 255, 255, 180], visible: cmykParams.showCyan },
+    { svg: result.magenta_svg, color: [255, 0, 255, 180], visible: cmykParams.showMagenta },
+    { svg: result.yellow_svg, color: [255, 255, 0, 180], visible: cmykParams.showYellow },
+    { svg: result.black_svg, color: [0, 0, 0, 255], visible: cmykParams.showBlack }
+  ];
+
+  strokeWeight(1);
+  noFill();
+
+  // Draw each visible layer
+  for (const layer of layers) {
+    if (layer.visible) {
+      stroke(...layer.color);
+      drawSVGPath(layer.svg);
+    }
+  }
+}
+
+/**
+ * Parse and draw an SVG path string
+ */
+function drawSVGPath(svgString) {
+  // Extract path d attribute
+  const pathMatch = svgString.match(/d="([^"]*)"/);
+  if (!pathMatch) return;
+
+  const pathData = pathMatch[1];
+
+  // Parse path commands (M x y, L x y)
+  const commands = pathData.match(/[ML]\s*[\d.]+\s+[\d.]+/g);
+  if (!commands) return;
+
+  beginShape();
+  for (const cmd of commands) {
+    const parts = cmd.trim().split(/\s+/);
+    const command = parts[0];
+    const x = parseFloat(parts[1]);
+    const y = parseFloat(parts[2]);
+
+    if (command === 'M') {
+      // Move without drawing - end current shape and start new one
+      endShape();
+      beginShape();
+      vertex(x, y);
+    } else if (command === 'L') {
+      // Line to
+      vertex(x, y);
+    }
+  }
+  endShape();
+}
 
 function setupGUI() {
   const gui = new dat.GUI();
