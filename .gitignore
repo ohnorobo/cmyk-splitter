@@ -34,3 +34,6 @@ uploads/
 # OS
 .DS_Store
 Thumbs.db
+
+# Debugging
+backend/services/debug_files/

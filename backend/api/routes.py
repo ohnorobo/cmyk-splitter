@@ -3,10 +3,12 @@
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException
 from PIL import Image
 import io
+import os
+from datetime import datetime
 from typing import Optional
 
 from backend.services.cmyk_splitter import CMYKSplitter
-from backend.services.fast_test_plotter import FastTestPlotter
+from backend.services.halftone_dots import HalftoneDotPlotter
 
 router = APIRouter()
 
@@ -46,11 +48,23 @@ async def process_image(
         # Store original dimensions
         original_width, original_height = pil_image.size
 
+        print(f"Processing image: {original_width}x{original_height}")
+
         # Split into CMYK channels
         splitter = CMYKSplitter()
         channels = splitter.split_channels(pil_image)
 
-        # Process each channel with StringyPlotter
+        # Debug: Save bilevel channel images
+        debug_dir = "backend/services/debug_files"
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        print(f"Saving debug files to {debug_dir}/")
+        for channel_name, channel_img in channels.items():
+            debug_path = os.path.join(debug_dir, f"{timestamp}_{channel_name}_bilevel.png")
+            channel_img.save(debug_path)
+            print(f"  Saved {channel_name} bilevel image: {debug_path}")
+
+        # Process each channel with HalftoneDotPlotter
         channel_configs = {
             "cyan": divisor_c,
             "magenta": divisor_m,
@@ -60,15 +74,26 @@ async def process_image(
 
         svg_results = {}
         for channel_name, divisor in channel_configs.items():
-            # Using FastTestPlotter for now (O(n) instead of O(n²))
-            # TODO: Switch back to StringyPlotter once algorithm is optimized
-            plotter = FastTestPlotter(
-                divisor=divisor, skip_paths_longer_than=skip_paths_longer_than
+            print(f"Processing {channel_name} channel (divisor={divisor})...")
+
+            # Using HalftoneDotPlotter for simple halftone visualization
+            # TODO: Switch to StringyPlotter for continuous line drawings
+            plotter = HalftoneDotPlotter(
+                divisor=divisor,
+                dot_size=1.5  # Can adjust based on image size
             )
             svg_string = plotter.process_image(channels[channel_name])
             svg_results[f"{channel_name}_svg"] = svg_string
 
+            # Debug: Save SVG files
+            svg_debug_path = os.path.join(debug_dir, f"{timestamp}_{channel_name}.svg")
+            with open(svg_debug_path, 'w') as f:
+                f.write(svg_string)
+            print(f"  Saved {channel_name} SVG: {svg_debug_path}")
+            print(f"  SVG length: {len(svg_string)} chars")
+
         # Return response
+        print(f"Processing complete! Files saved in {debug_dir}/")
         return {
             "status": "completed",
             "result": {
