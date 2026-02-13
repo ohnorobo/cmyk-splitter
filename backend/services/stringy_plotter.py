@@ -11,7 +11,7 @@ class StringyPlotter:
     Converts a bilevel (black and white) image into a single continuous line SVG.
 
     The algorithm:
-    1. Extracts black pixels from the image
+    1. Extracts white pixels (ink areas) from the image
     2. Randomly samples pixels based on divisor
     3. Connects pixels using nearest-neighbor traversal
     4. Generates SVG path with moves for gaps longer than threshold
@@ -41,17 +41,17 @@ class StringyPlotter:
         # Convert image to numpy array
         img_array = np.array(image)
 
-        # Find coordinates of black pixels (value = 0 in mode '1')
-        # PIL mode '1': 0=black, 1=white
-        black_pixel_coords = np.where(img_array == 0)
+        # Find coordinates of white pixels (value = 1 in mode '1')
+        # White pixels represent areas with ink/color
+        white_pixel_coords = np.where(img_array != 0)
 
         # Stack coordinates and swap to (x, y) format
         # np.where returns (rows, cols) which is (y, x), so reverse it
-        points = np.column_stack(list(reversed(black_pixel_coords)))
+        points = np.column_stack(list(reversed(white_pixel_coords)))
 
-        # Check if there are any black pixels
+        # Check if there are any white pixels
         if points.shape[0] == 0:
-            # No black pixels - return empty SVG
+            # No white pixels - return empty SVG
             return self._create_svg(image.width, image.height, "")
 
         # Sample points based on divisor

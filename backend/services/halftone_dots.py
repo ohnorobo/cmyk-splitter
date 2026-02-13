@@ -39,27 +39,24 @@ class HalftoneDotPlotter:
         # Convert image to numpy array
         img_array = np.array(image)
 
-        # Find coordinates of black pixels (value = 0 in mode '1')
-        black_pixel_coords = np.where(img_array == 0)
+        # Find coordinates of white pixels (value = 1 in mode '1')
+        # White pixels represent areas with ink/color
+        white_pixel_coords = np.where(img_array != 0)
 
         # Stack coordinates and swap to (x, y) format
-        points = np.column_stack(list(reversed(black_pixel_coords)))
+        points = np.column_stack(list(reversed(white_pixel_coords)))
 
-        # Check if there are any black pixels
+        # Check if there are any white pixels
         if points.shape[0] == 0:
-            # No black pixels - return empty SVG
+            # No white pixels - return empty SVG
             return self._create_svg(image.width, image.height, "")
 
-        # Use GRID sampling instead of random to preserve spatial structure
-        # Sample every Nth point to maintain the image pattern
-        step = max(1, points.shape[0] // self.max_dots)
-        sampled_points = points[::step]
+        # Use random sampling to get a representative distribution
+        num_samples = min(self.max_dots, points.shape[0])
+        indices = np.random.choice(points.shape[0], size=num_samples, replace=False)
+        sampled_points = points[indices]
 
-        # Cap at max_dots if still too many
-        if sampled_points.shape[0] > self.max_dots:
-            sampled_points = sampled_points[:self.max_dots]
-
-        # print(f"  Total black pixels: {points.shape[0]}, sampling every {step} pixels = {sampled_points.shape[0]} dots")
+        # print(f"  Total black pixels: {points.shape[0]}, randomly sampled {sampled_points.shape[0]} dots")
 
         # Create SVG circles
         circles = self._create_circles(sampled_points)
