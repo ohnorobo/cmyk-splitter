@@ -177,9 +177,9 @@ async function processImage(file) {
     showStatus('Processing complete ✓', 'success');
     setTimeout(() => showStatus('', ''), 2000);
 
-    // Trigger redraw
-    if (typeof redraw === 'function') {
-      redraw();
+    // Render the CMYK layers
+    if (typeof renderCMYKLayers === 'function') {
+      renderCMYKLayers();
     }
   } catch (error) {
     showStatus(`Error: ${error.message}`, 'error');

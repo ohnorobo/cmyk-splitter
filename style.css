@@ -8,16 +8,17 @@ body {
     height: 100vh;
   }
   
-/* p5 canvas centered */
-.p5Canvas {
-    display: block;
-    margin: auto;
-    background: white;
+/* CMYK container centered */
+#cmyk-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
 }
 
-/* Apply multiply blend mode to SVG elements for CMYK blending */
-.p5Canvas svg > * {
-    mix-blend-mode: multiply;
+#cmyk-container svg {
+    display: block;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 header {
