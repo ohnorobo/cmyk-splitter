@@ -87,9 +87,9 @@ All debug files are timestamped (format: `YYYYMMDD_HHMMSS_*`)
 ### Terminal 2: Start Frontend Server
 
 ```bash
-cd cmyk-splitter/frontend/
+cd cmyk-splitter/
 
-# Start simple HTTP server
+# Start simple HTTP server (serves from root where index.html is)
 python3 -m http.server 8080
 ```
 
@@ -98,6 +98,8 @@ The frontend will be available at `http://localhost:8080`
 ### 3. Open in Browser
 
 Navigate to `http://localhost:8080` in your web browser.
+
+**Note:** The frontend is split between `index.html` (at root) and `frontend/` (containing JS/CSS/libraries).
 
 ## Usage
 
@@ -187,13 +189,14 @@ cmyk-splitter/
 │       ├── svg_combiner.py     # Combines channel SVGs into layered output
 │       └── stringy_plotter.py  # Continuous line path generation (alternative)
 ├── frontend/
-│   ├── index.html              # Main HTML page
 │   ├── sketch.js               # CMYK visualization
 │   ├── svgtools.js             # SVG export utilities
 │   ├── api-client.js           # Frontend API communication
 │   ├── cmyk-controls.js        # dat.GUI controls
 │   ├── style.css               # Styling
 │   └── lib/                    # Frontend libraries (dat.GUI)
+├── static/                     # Static assets (default images)
+├── index.html                  # Main HTML page (at root for GitHub Pages)
 └── README.md                   # This file
 ```
 
