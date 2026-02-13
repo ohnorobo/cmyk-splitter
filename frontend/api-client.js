@@ -3,8 +3,18 @@
  */
 
 class CMYKAPIClient {
-  constructor(baseURL = 'http://localhost:8000') {
-    this.baseURL = baseURL;
+  constructor(baseURL = null) {
+    // Auto-detect backend based on environment
+    if (baseURL) {
+      this.baseURL = baseURL;
+    } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      // Running locally
+      this.baseURL = 'http://localhost:8000';
+    } else {
+      // Running on GitHub Pages - use deployed backend
+      // TODO: Replace with your actual Render URL
+      this.baseURL = 'https://cmyk-splitter-api.onrender.com';
+    }
   }
 
   /**
