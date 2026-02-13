@@ -9,8 +9,10 @@ class CMYKSplitter:
     """Splits RGB images into CMYK channels with thresholding and GCR."""
 
     # Threshold values (0-255)
-    THRESHOLD_CMK = 127  # 50% threshold for Cyan, Magenta, Black
-    THRESHOLD_Y = 165    # 65% threshold for Yellow (yellows need special handling)
+    THRESHOLD_C = 127  # 50% threshold for Cyan
+    THRESHOLD_M = 127  # 50% threshold for Magenta
+    THRESHOLD_Y = 165  # 65% threshold for Yellow (yellows need special handling)
+    THRESHOLD_K = 127  # 50% threshold for Black
 
     @staticmethod
     def rgb_to_cmyk_with_gcr(image: Image.Image) -> Tuple[Image.Image, Image.Image, Image.Image, Image.Image]:
@@ -93,10 +95,10 @@ class CMYKSplitter:
         # Apply thresholds to create bilevel images
         # In CMYK mode, 0 = full ink, 255 = no ink
         # So we invert the comparison: values < threshold get ink (black)
-        cyan_bilevel = c.point(lambda x: 0 if x < CMYKSplitter.THRESHOLD_CMK else 255, mode='1')
-        magenta_bilevel = m.point(lambda x: 0 if x < CMYKSplitter.THRESHOLD_CMK else 255, mode='1')
+        cyan_bilevel = c.point(lambda x: 0 if x < CMYKSplitter.THRESHOLD_C else 255, mode='1')
+        magenta_bilevel = m.point(lambda x: 0 if x < CMYKSplitter.THRESHOLD_M else 255, mode='1')
         yellow_bilevel = y.point(lambda x: 0 if x < CMYKSplitter.THRESHOLD_Y else 255, mode='1')
-        black_bilevel = k.point(lambda x: 0 if x < CMYKSplitter.THRESHOLD_CMK else 255, mode='1')
+        black_bilevel = k.point(lambda x: 0 if x < CMYKSplitter.THRESHOLD_K else 255, mode='1')
 
         return {
             'cyan': cyan_bilevel,
