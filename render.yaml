@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: cmyk-splitter-api
+    name: cmyk-splitter
     runtime: python
     buildCommand: pip install -r backend/requirements.txt
     startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
