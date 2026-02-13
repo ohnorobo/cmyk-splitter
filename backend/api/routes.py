@@ -80,7 +80,8 @@ async def process_image(
             # TODO: Switch to StringyPlotter for continuous line drawings
             plotter = HalftoneDotPlotter(
                 divisor=divisor,
-                dot_size=1.5  # Can adjust based on image size
+                dot_size=10.0,     # Large dots for visibility
+                max_dots=2000      # Hard cap to keep SVG files small
             )
             svg_string = plotter.process_image(channels[channel_name])
             svg_results[f"{channel_name}_svg"] = svg_string

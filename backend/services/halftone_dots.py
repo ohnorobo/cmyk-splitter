@@ -13,16 +13,18 @@ class HalftoneDotPlotter:
     Very fast (no path-finding) and shows actual image content.
     """
 
-    def __init__(self, divisor: int = 50, dot_size: float = 1.5):
+    def __init__(self, divisor: int = 50, dot_size: float = 2.0, max_dots: int = 2000):
         """
         Initialize HalftoneDotPlotter.
 
         Args:
             divisor: Sample every Nth pixel (higher = fewer dots, faster)
-            dot_size: Radius of each dot in pixels (default 1.5)
+            dot_size: Radius of each dot in pixels (default 2.0)
+            max_dots: Maximum number of dots to render (default 2000)
         """
         self.divisor = divisor
         self.dot_size = dot_size
+        self.max_dots = max_dots
 
     def process_image(self, image: Image.Image) -> str:
         """
@@ -48,11 +50,16 @@ class HalftoneDotPlotter:
             # No black pixels - return empty SVG
             return self._create_svg(image.width, image.height, "")
 
-        # Sample points based on divisor
-        sample_size = max(1, points.shape[0] // self.divisor)
-        sampled_points = points[
-            np.random.choice(points.shape[0], sample_size, replace=False), :
-        ]
+        # Use GRID sampling instead of random to preserve spatial structure
+        # Sample every Nth point to maintain the image pattern
+        step = max(1, points.shape[0] // self.max_dots)
+        sampled_points = points[::step]
+
+        # Cap at max_dots if still too many
+        if sampled_points.shape[0] > self.max_dots:
+            sampled_points = sampled_points[:self.max_dots]
+
+        print(f"  Total black pixels: {points.shape[0]}, sampling every {step} pixels = {sampled_points.shape[0]} dots")
 
         # Create SVG circles
         circles = self._create_circles(sampled_points)
