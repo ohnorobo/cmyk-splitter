@@ -6,7 +6,7 @@ import io
 from typing import Optional
 
 from backend.services.cmyk_splitter import CMYKSplitter
-from backend.services.stringy_plotter import StringyPlotter
+from backend.services.fast_test_plotter import FastTestPlotter
 
 router = APIRouter()
 
@@ -60,7 +60,9 @@ async def process_image(
 
         svg_results = {}
         for channel_name, divisor in channel_configs.items():
-            plotter = StringyPlotter(
+            # Using FastTestPlotter for now (O(n) instead of O(n²))
+            # TODO: Switch back to StringyPlotter once algorithm is optimized
+            plotter = FastTestPlotter(
                 divisor=divisor, skip_paths_longer_than=skip_paths_longer_than
             )
             svg_string = plotter.process_image(channels[channel_name])
