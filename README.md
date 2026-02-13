@@ -36,7 +36,7 @@ python3.12 -m venv venv
 source venv/bin/activate
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 ```
 
 ### 2. Frontend Setup
@@ -87,7 +87,7 @@ All debug files are timestamped (format: `YYYYMMDD_HHMMSS_*`)
 ### Terminal 2: Start Frontend Server
 
 ```bash
-cd cmyk-splitter/
+cd cmyk-splitter/frontend/
 
 # Start simple HTTP server
 python3 -m http.server 8080
@@ -177,6 +177,8 @@ Process image into CMYK halftone SVG with layered output
 cmyk-splitter/
 ├── backend/
 │   ├── main.py                 # FastAPI app entry point
+│   ├── config.py               # Configuration (debug mode, etc.)
+│   ├── requirements.txt        # Python dependencies
 │   ├── api/
 │   │   └── routes.py           # API endpoints
 │   └── services/
@@ -184,14 +186,14 @@ cmyk-splitter/
 │       ├── halftone_dots.py    # Halftone dot plotter
 │       ├── svg_combiner.py     # Combines channel SVGs into layered output
 │       └── stringy_plotter.py  # Continuous line path generation (alternative)
-├── lib/                        # Frontend libraries (dat.GUI)
-├── api-client.js               # Frontend API communication
-├── cmyk-controls.js            # dat.GUI controls
-├── index.html                  # Main HTML page
-├── sketch.js                   # CMYK visualization
-├── style.css                   # Styling
-├── svgtools.js                 # SVG export utilities
-├── requirements.txt            # Python dependencies
+├── frontend/
+│   ├── index.html              # Main HTML page
+│   ├── sketch.js               # CMYK visualization
+│   ├── svgtools.js             # SVG export utilities
+│   ├── api-client.js           # Frontend API communication
+│   ├── cmyk-controls.js        # dat.GUI controls
+│   ├── style.css               # Styling
+│   └── lib/                    # Frontend libraries (dat.GUI)
 └── README.md                   # This file
 ```
 
@@ -224,7 +226,7 @@ cmyk-splitter/
 ### Backend won't start
 - Make sure virtual environment is activated: `source venv/bin/activate`
 - Check Python version: `python --version` (should be 3.12 or 3.11)
-- Reinstall dependencies: `pip install -r requirements.txt`
+- Reinstall dependencies: `pip install -r backend/requirements.txt`
 
 ### Frontend shows "Backend not available"
 - Verify backend is running on port 8000
