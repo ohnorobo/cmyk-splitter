@@ -15,6 +15,11 @@ body {
     background: white;
 }
 
+/* Apply multiply blend mode to SVG elements for CMYK blending */
+.p5Canvas svg > * {
+    mix-blend-mode: multiply;
+}
+
 header {
     background-color: #111;
     color: white;
