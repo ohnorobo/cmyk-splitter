@@ -59,7 +59,7 @@ class HalftoneDotPlotter:
         if sampled_points.shape[0] > self.max_dots:
             sampled_points = sampled_points[:self.max_dots]
 
-        print(f"  Total black pixels: {points.shape[0]}, sampling every {step} pixels = {sampled_points.shape[0]} dots")
+        # print(f"  Total black pixels: {points.shape[0]}, sampling every {step} pixels = {sampled_points.shape[0]} dots")
 
         # Create SVG circles
         circles = self._create_circles(sampled_points)
