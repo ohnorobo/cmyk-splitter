@@ -65,6 +65,37 @@ function initializeCMYKControls() {
 
   // Check backend health
   checkBackendHealth();
+
+  // Load default image
+  loadDefaultImage();
+}
+
+/**
+ * Load and process default image on startup
+ */
+async function loadDefaultImage() {
+  try {
+    const response = await fetch('static/urn.png');
+    const blob = await response.blob();
+    const file = new File([blob], 'urn.png', { type: 'image/png' });
+
+    // Store for reprocessing
+    window.currentImageFile = file;
+
+    // Show preview
+    const previewContainer = document.getElementById('preview-container');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      previewContainer.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 200px; max-height: 200px;">`;
+    };
+    reader.readAsDataURL(file);
+
+    // Process the default image
+    await processImage(file);
+  } catch (error) {
+    console.error('Failed to load default image:', error);
+    // Silently fail - user can upload their own image
+  }
 }
 
 /**
