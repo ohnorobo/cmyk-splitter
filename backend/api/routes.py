@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Optional
 
 from backend.services.cmyk_splitter import CMYKSplitter
-from backend.services.halftone_dots import HalftoneDotPlotter
+from backend.services.stringy_plotter import StringyPlotter
 from backend.services.svg_combiner import SVGCombiner
 from backend.config import DEBUG, DEBUG_DIR
 
@@ -96,11 +96,10 @@ async def process_image(
             if DEBUG:
                 print(f"Processing {channel_name} channel (divisor={divisor})...")
 
-            # Using HalftoneDotPlotter for simple halftone visualization
-            plotter = HalftoneDotPlotter(
+            # Using StringyPlotter for continuous line drawings
+            plotter = StringyPlotter(
                 divisor=divisor,
-                dot_size=10.0,     # Large dots for visibility
-                max_dots=2000      # Hard cap to keep SVG files small
+                skip_paths_longer_than=skip_paths_longer_than
             )
             svg_string = plotter.process_image(channels[channel_name])
             svg_results[f"{channel_name}_svg"] = svg_string

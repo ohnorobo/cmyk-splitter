@@ -82,20 +82,35 @@ class SVGCombiner:
             group.set('id', f'{channel_name}-layer')
             group.set('style', 'mix-blend-mode: multiply;')
 
-            # Extract all circles from the channel SVG
+            # Extract all circles from the channel SVG (HalftoneDotPlotter)
             circles = channel_root.findall('.//{http://www.w3.org/2000/svg}circle')
             if not circles:
                 # Try without namespace
                 circles = channel_root.findall('.//circle')
 
-            # Add circles to the group with proper color
+            # Extract all paths from the channel SVG (StringyPlotter)
+            paths = channel_root.findall('.//{http://www.w3.org/2000/svg}path')
+            if not paths:
+                # Try without namespace
+                paths = channel_root.findall('.//path')
+
             channel_color = SVGCombiner.CHANNEL_COLORS[channel_name]
+
+            # Add circles to the group with proper color
             for circle in circles:
                 new_circle = ET.SubElement(group, 'circle')
                 new_circle.set('cx', circle.get('cx', '0'))
                 new_circle.set('cy', circle.get('cy', '0'))
                 new_circle.set('r', circle.get('r', '1'))
                 new_circle.set('fill', channel_color)
+
+            # Add paths to the group with proper color
+            for path in paths:
+                new_path = ET.SubElement(group, 'path')
+                new_path.set('d', path.get('d', ''))
+                new_path.set('fill', 'none')
+                new_path.set('stroke', channel_color)
+                new_path.set('stroke-width', path.get('stroke-width', '1'))
 
         # Convert to string
         svg_string = ET.tostring(svg_root, encoding='unicode', method='xml')
