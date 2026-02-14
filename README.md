@@ -254,7 +254,4 @@ cmyk-splitter/
 
 - Built with [FastAPI](https://fastapi.tiangolo.com/), [Pillow](https://python-pillow.org/), and [NumPy](https://numpy.org/)
 - dat.GUI for controls
-
-## License
-
-See individual components for their respective licenses.
+- Continuous line drawing algorithm inspired by [StringyPlotter](https://github.com/th0ma5w/StringyPlotter) by th0ma5w
