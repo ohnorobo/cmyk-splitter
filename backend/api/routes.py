@@ -4,11 +4,13 @@ from fastapi import APIRouter, File, UploadFile, Form, HTTPException
 from PIL import Image
 import io
 import os
+import json
+from pathlib import Path
 from datetime import datetime
 from typing import Optional
 
 from backend.services.cmyk_splitter import CMYKSplitter
-from backend.services.halftone_dots import HalftoneDotPlotter
+from backend.services.stringy_plotter import StringyPlotter
 from backend.services.svg_combiner import SVGCombiner
 from backend.config import DEBUG, DEBUG_DIR
 
@@ -96,11 +98,10 @@ async def process_image(
             if DEBUG:
                 print(f"Processing {channel_name} channel (divisor={divisor})...")
 
-            # Using HalftoneDotPlotter for simple halftone visualization
-            plotter = HalftoneDotPlotter(
+            # Using StringyPlotter for continuous line drawings
+            plotter = StringyPlotter(
                 divisor=divisor,
-                dot_size=10.0,     # Large dots for visibility
-                max_dots=2000      # Hard cap to keep SVG files small
+                skip_paths_longer_than=skip_paths_longer_than
             )
             svg_string = plotter.process_image(channels[channel_name])
             svg_results[f"{channel_name}_svg"] = svg_string
@@ -143,4 +144,36 @@ async def process_image(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to process image: {str(e)}"
+        )
+
+
+@router.get("/process-image-cached-urn")
+async def get_cached_urn_response():
+    """
+    Return pre-generated response for urn.png with default parameters.
+
+    This is a fast endpoint that avoids re-processing the default image.
+    Only valid for urn.png with default params:
+      - divisor_c=50, divisor_m=50, divisor_y=50, divisor_k=25
+      - skip_paths_longer_than=25
+
+    Returns:
+        Cached JSON response with combined_svg and metadata
+    """
+    cache_file = Path(__file__).parent.parent / "cache" / "urn_default.json"
+
+    if not cache_file.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Cached response not found. Run: python -m backend.scripts.generate_urn_cache"
+        )
+
+    try:
+        with open(cache_file, "r") as f:
+            cached_response = json.load(f)
+        return cached_response
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to load cached response: {str(e)}"
         )
