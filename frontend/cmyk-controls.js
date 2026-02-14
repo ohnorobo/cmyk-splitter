@@ -15,6 +15,12 @@ window.cmykParams = {
   divisor_k: 25,
   skip_paths_longer_than: 25,
 
+  // Stroke width parameters
+  width_c: 15,
+  width_m: 15,
+  width_y: 15,
+  width_k: 3,
+
   // Actions
   uploadImage: function() {
     document.getElementById('image-upload').click();
@@ -49,6 +55,30 @@ function setupCMYKGUI() {
   gui.add(cmykParams, 'divisor_k', 10, 200, 1).name('Black Divisor');
   gui.add(cmykParams, 'skip_paths_longer_than', 5, 100, 1).name('Skip Paths >');
   gui.add(cmykParams, 'reprocess').name('🔄 Reprocess');
+  gui.add(cmykParams, 'width_c', 0.1, 50, 0.5).name('Cyan Width')
+    .onChange(() => {
+      if (typeof updateStrokeWidths === 'function') {
+        updateStrokeWidths();
+      }
+    });
+  gui.add(cmykParams, 'width_m', 0.1, 50, 0.5).name('Magenta Width')
+    .onChange(() => {
+      if (typeof updateStrokeWidths === 'function') {
+        updateStrokeWidths();
+      }
+    });
+  gui.add(cmykParams, 'width_y', 0.1, 50, 0.5).name('Yellow Width')
+    .onChange(() => {
+      if (typeof updateStrokeWidths === 'function') {
+        updateStrokeWidths();
+      }
+    });
+  gui.add(cmykParams, 'width_k', 0.1, 50, 0.5).name('Black Width')
+    .onChange(() => {
+      if (typeof updateStrokeWidths === 'function') {
+        updateStrokeWidths();
+      }
+    });
   gui.add(cmykParams, 'export').name('💾 Export SVG');
 }
 

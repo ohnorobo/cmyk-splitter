@@ -47,6 +47,35 @@ function renderCMYKLayers() {
   // Clear container and add SVG
   container.innerHTML = '';
   container.appendChild(svgElement);
+
+  // Apply stroke widths from current parameters
+  updateStrokeWidths();
+}
+
+/**
+ * Update stroke widths for all CMYK layers
+ */
+function updateStrokeWidths() {
+  const svg = document.querySelector('#cmyk-container svg');
+  if (!svg) return;
+
+  // Update each layer with its corresponding width
+  const widthMap = {
+    'cyan-layer': window.cmykParams.width_c,
+    'magenta-layer': window.cmykParams.width_m,
+    'yellow-layer': window.cmykParams.width_y,
+    'black-layer': window.cmykParams.width_k
+  };
+
+  for (const [layerId, width] of Object.entries(widthMap)) {
+    const layer = svg.querySelector(`#${layerId}`);
+    if (layer) {
+      const paths = layer.querySelectorAll('path');
+      paths.forEach(path => {
+        path.setAttribute('stroke-width', width);
+      });
+    }
+  }
 }
 
 /**
@@ -62,3 +91,6 @@ if (document.readyState === 'loading') {
 } else {
   setup();
 }
+
+// Export for use by control handlers
+window.updateStrokeWidths = updateStrokeWidths;
