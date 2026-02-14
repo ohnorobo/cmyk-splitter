@@ -4,8 +4,6 @@ from fastapi import APIRouter, File, UploadFile, Form, HTTPException
 from PIL import Image
 import io
 import os
-import json
-from pathlib import Path
 from datetime import datetime
 from typing import Optional
 
@@ -144,36 +142,4 @@ async def process_image(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to process image: {str(e)}"
-        )
-
-
-@router.get("/process-image-cached-urn")
-async def get_cached_urn_response():
-    """
-    Return pre-generated response for urn.png with default parameters.
-
-    This is a fast endpoint that avoids re-processing the default image.
-    Only valid for urn.png with default params:
-      - divisor_c=50, divisor_m=50, divisor_y=50, divisor_k=25
-      - skip_paths_longer_than=25
-
-    Returns:
-        Cached JSON response with combined_svg and metadata
-    """
-    cache_file = Path(__file__).parent.parent / "cache" / "urn_default.json"
-
-    if not cache_file.exists():
-        raise HTTPException(
-            status_code=404,
-            detail="Cached response not found. Run: python -m backend.scripts.generate_urn_cache"
-        )
-
-    try:
-        with open(cache_file, "r") as f:
-            cached_response = json.load(f)
-        return cached_response
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to load cached response: {str(e)}"
         )

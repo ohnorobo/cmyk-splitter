@@ -58,16 +58,16 @@ class CMYKAPIClient {
 
   /**
    * Get cached response for default urn.png image (fast path)
+   * Loads from local JSON file, no backend required
    *
    * @returns {Promise<Object>} Cached response with combined_svg and metadata
    */
   async getCachedUrnResponse() {
     try {
-      const response = await fetch(`${this.baseURL}/api/process-image-cached-urn`);
+      const response = await fetch('frontend/cache/urn_default.json');
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error ${response.status}`);
+        throw new Error(`Failed to load cached response: HTTP ${response.status}`);
       }
 
       return await response.json();
