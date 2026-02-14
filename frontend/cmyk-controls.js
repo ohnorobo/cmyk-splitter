@@ -122,7 +122,7 @@ function initializeCMYKControls() {
  */
 async function loadDefaultImage() {
   try {
-    const response = await fetch('static/urn.png');
+    const response = await fetch('frontend/static/urn.png');
     const blob = await response.blob();
     const file = new File([blob], 'urn.png', { type: 'image/png' });
 

@@ -194,8 +194,9 @@ cmyk-splitter/
 │   ├── api-client.js           # Frontend API communication
 │   ├── cmyk-controls.js        # dat.GUI controls
 │   ├── style.css               # Styling
-│   └── lib/                    # Frontend libraries (dat.GUI)
-├── static/                     # Static assets (default images)
+│   ├── lib/                    # Frontend libraries (dat.GUI)
+│   ├── static/                 # Static assets (default images)
+│   └── cache/                  # Cached responses (urn.png default)
 ├── index.html                  # Main HTML page (at root for GitHub Pages)
 └── README.md                   # This file
 ```

@@ -12,7 +12,7 @@ from fastapi import UploadFile
 
 async def generate_cache():
     # Path to urn.png
-    urn_path = Path(__file__).parent.parent.parent / "static" / "urn.png"
+    urn_path = Path(__file__).parent.parent.parent / "frontend" / "static" / "urn.png"
 
     if not urn_path.exists():
         print(f"❌ Error: urn.png not found at {urn_path}")
@@ -48,8 +48,8 @@ async def generate_cache():
         skip_paths_longer_than=25
     )
 
-    # Save to cache file
-    cache_dir = Path(__file__).parent.parent / "cache"
+    # Save to frontend cache file (no backend dependency)
+    cache_dir = Path(__file__).parent.parent.parent / "frontend" / "cache"
     cache_dir.mkdir(exist_ok=True)
     cache_file = cache_dir / "urn_default.json"
 
