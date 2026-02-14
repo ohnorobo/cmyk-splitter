@@ -23,9 +23,11 @@ function renderCMYKLayers() {
   const result = window.cmykData.result;
   const metadata = result.metadata;
 
-  // Get original image dimensions
-  currentImageWidth = metadata.original_dimensions[0];
-  currentImageHeight = metadata.original_dimensions[1];
+  // Get processing dimensions (resized) for correct coordinate space
+  // Fall back to original_dimensions for backwards compatibility
+  const processingDims = metadata.processing_dimensions || metadata.original_dimensions;
+  currentImageWidth = processingDims[0];
+  currentImageHeight = processingDims[1];
 
   // Calculate scale to fit in max 800px
   const maxSize = 800;

@@ -15,6 +15,42 @@ from backend.config import DEBUG, DEBUG_DIR
 
 router = APIRouter()
 
+# Maximum dimension for image processing (to improve performance)
+# Set to large value to effectively disable resizing (quality > speed for now)
+MAX_IMAGE_DIMENSION = 10000
+
+
+def resize_image_if_needed(image: Image.Image, max_dimension: int = MAX_IMAGE_DIMENSION) -> Image.Image:
+    """
+    Resize image if either dimension exceeds max_dimension, maintaining aspect ratio.
+
+    Args:
+        image: PIL Image to potentially resize
+        max_dimension: Maximum width or height in pixels
+
+    Returns:
+        Resized PIL Image (or original if already small enough)
+    """
+    width, height = image.size
+
+    # Check if resize is needed
+    if width <= max_dimension and height <= max_dimension:
+        return image
+
+    # Calculate new dimensions maintaining aspect ratio
+    if width > height:
+        new_width = max_dimension
+        new_height = int(height * (max_dimension / width))
+    else:
+        new_height = max_dimension
+        new_width = int(width * (max_dimension / height))
+
+    # Resize using high-quality Lanczos resampling
+    resized = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    print(f"  Resized from {width}x{height} to {new_width}x{new_height} for faster processing")
+
+    return resized
+
 
 @router.post("/process-image")
 async def process_image(
@@ -52,12 +88,15 @@ async def process_image(
         # Store original dimensions
         original_width, original_height = pil_image.size
 
-        if DEBUG:
-            print(f"Processing image: {original_width}x{original_height}")
+        print(f"Processing image: {original_width}x{original_height}")
 
         # Convert to RGB if not already
         if pil_image.mode != 'RGB':
             pil_image = pil_image.convert('RGB')
+
+        # Resize if needed for faster processing
+        pil_image = resize_image_if_needed(pil_image)
+        processing_width, processing_height = pil_image.size
 
         # Split into CMYK channels (with thresholding)
         splitter = CMYKSplitter()
@@ -115,18 +154,19 @@ async def process_image(
                 print(f"  SVG length: {len(svg_string)} chars")
 
         # Combine all channel SVGs into a single layered SVG
+        # Use processing dimensions (resized) for the SVG
         combined_svg = SVGCombiner.combine_cmyk_layers(
             cyan_svg=svg_results["cyan_svg"],
             magenta_svg=svg_results["magenta_svg"],
             yellow_svg=svg_results["yellow_svg"],
             black_svg=svg_results["black_svg"],
-            width=original_width,
-            height=original_height
+            width=processing_width,
+            height=processing_height
         )
 
         # Return response
         elapsed_time = time.time() - start_time
-        print(f"✓ Request completed in {elapsed_time:.2f}s (image: {original_width}x{original_height}, file: {image.filename})")
+        print(f"✓ Request completed in {elapsed_time:.2f}s (file: {image.filename})")
 
         if DEBUG:
             print(f"Processing complete! Files saved in {DEBUG_DIR}/")
@@ -136,7 +176,8 @@ async def process_image(
             "result": {
                 "combined_svg": combined_svg,
                 "metadata": {
-                    "original_dimensions": [original_width, original_height]
+                    "original_dimensions": [original_width, original_height],
+                    "processing_dimensions": [processing_width, processing_height]
                 },
             },
         }
