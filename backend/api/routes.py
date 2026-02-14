@@ -4,6 +4,7 @@ from fastapi import APIRouter, File, UploadFile, Form, HTTPException
 from PIL import Image
 import io
 import os
+import time
 from datetime import datetime
 from typing import Optional
 
@@ -38,6 +39,7 @@ async def process_image(
     Returns:
         JSON response with SVG strings for each CMYK channel
     """
+    start_time = time.time()
     try:
         # Validate file type
         if not image.content_type or not image.content_type.startswith("image/"):
@@ -123,6 +125,9 @@ async def process_image(
         )
 
         # Return response
+        elapsed_time = time.time() - start_time
+        print(f"✓ Request completed in {elapsed_time:.2f}s (image: {original_width}x{original_height}, file: {image.filename})")
+
         if DEBUG:
             print(f"Processing complete! Files saved in {DEBUG_DIR}/")
 
@@ -138,7 +143,8 @@ async def process_image(
 
     except Exception as e:
         # Log error and return failure response
-        print(f"Error processing image: {str(e)}")
+        elapsed_time = time.time() - start_time
+        print(f"✗ Request failed after {elapsed_time:.2f}s: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail=f"Failed to process image: {str(e)}"
