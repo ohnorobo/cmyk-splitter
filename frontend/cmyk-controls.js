@@ -26,10 +26,27 @@ window.cmykParams = {
     document.getElementById('image-upload').click();
   },
   reprocess: function() {
-    if (window.currentImageFile) {
-      processImage(window.currentImageFile);
-    } else {
+    if (!window.currentImageFile) {
       showStatus('Please upload an image first', 'error');
+      return;
+    }
+
+    // Check if this is urn.png with default parameters
+    const isUrnPng = window.currentImageFile.name === 'urn.png';
+    const hasDefaultParams = (
+      cmykParams.divisor_c === 50 &&
+      cmykParams.divisor_m === 50 &&
+      cmykParams.divisor_y === 50 &&
+      cmykParams.divisor_k === 25 &&
+      cmykParams.skip_paths_longer_than === 25
+    );
+
+    if (isUrnPng && hasDefaultParams) {
+      // Use fast cached endpoint
+      loadDefaultImage();
+    } else {
+      // Use regular processing
+      processImage(window.currentImageFile);
     }
   },
   export: function() {
@@ -120,8 +137,25 @@ async function loadDefaultImage() {
     };
     reader.readAsDataURL(file);
 
-    // Process the default image
-    await processImage(file);
+    // Use fast cached endpoint for default urn.png
+    showStatus('Loading default image...', 'processing');
+
+    try {
+      const result = await window.apiClient.getCachedUrnResponse();
+      window.cmykData = result;
+
+      showStatus('Default image loaded ✓', 'success');
+      setTimeout(() => showStatus('', ''), 2000);
+
+      // Render the CMYK layers
+      if (typeof renderCMYKLayers === 'function') {
+        renderCMYKLayers();
+      }
+    } catch (error) {
+      // Fallback to regular processing if cache fails
+      console.warn('Cached response failed, falling back to regular processing:', error);
+      await processImage(file);
+    }
   } catch (error) {
     console.error('Failed to load default image:', error);
     // Silently fail - user can upload their own image

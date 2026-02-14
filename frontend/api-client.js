@@ -57,6 +57,27 @@ class CMYKAPIClient {
   }
 
   /**
+   * Get cached response for default urn.png image (fast path)
+   *
+   * @returns {Promise<Object>} Cached response with combined_svg and metadata
+   */
+  async getCachedUrnResponse() {
+    try {
+      const response = await fetch(`${this.baseURL}/api/process-image-cached-urn`);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Cached urn fetch failed:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Check backend health status
    *
    * @returns {Promise<Object>} Health status response

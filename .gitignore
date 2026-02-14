@@ -37,3 +37,6 @@ Thumbs.db
 
 # Debugging
 backend/services/debug_files/
+
+# Claude Code
+.claude/
