@@ -1,7 +1,7 @@
 """StringyPlotter service - converts bilevel images to continuous line SVG drawings."""
 
 import numpy as np
-from scipy.spatial.distance import cdist
+from scipy.spatial import KDTree
 from PIL import Image
 from typing import Tuple
 
@@ -73,7 +73,11 @@ class StringyPlotter:
         self, points: np.ndarray
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Connect points using nearest neighbor algorithm.
+        Connect points using nearest neighbor algorithm with KD-Tree optimization.
+
+        Uses adaptive k-NN queries: starts with k=50 and expands only when needed.
+        Leverages spatial locality - next unvisited point is usually very close.
+        O(N log N) amortized complexity vs O(N²) brute force.
 
         Args:
             points: Array of shape (N, 2) with (x, y) coordinates
@@ -87,29 +91,53 @@ class StringyPlotter:
         if points.shape[0] == 1:
             return points, np.array([0])
 
+        # Build KD-Tree for fast nearest-neighbor queries
+        tree = KDTree(points, compact_nodes=True, balanced_tree=True)
+
+        # Track visited points
+        visited = np.zeros(points.shape[0], dtype=bool)
+
         # Start with first point
-        current_point = points[0]
-        remaining_points = points[1:]
-        point_collection = [current_point]
+        current_idx = 0
+        visited[current_idx] = True
+        point_collection = [points[current_idx]]
         distance_collection = [0]
 
-        # Greedily connect nearest neighbors
+        # Initial k for nearest neighbor queries (balance between speed and success rate)
+        k_initial = min(50, points.shape[0])
+
+        # Greedily connect nearest neighbors using adaptive k-NN
         for _ in range(points.shape[0] - 1):
-            # Calculate distances from current point to all remaining points
-            distances = cdist(remaining_points, [current_point])
-            nearest_distance = np.min(distances)
-            nearest_index = np.where(distances == nearest_distance)[0][0]
-            nearest_point = remaining_points[nearest_index]
+            k = k_initial
+            found = False
 
-            # Add to collections
-            point_collection.append(nearest_point)
-            distance_collection.append(nearest_distance)
+            # Adaptive search: start with small k, expand if all neighbors visited
+            while not found and k <= points.shape[0]:
+                # Query k nearest neighbors
+                distances, indices = tree.query(points[current_idx], k=k)
 
-            # Remove the point we just added and continue
-            mask = np.ones(remaining_points.shape[0], dtype=bool)
-            mask[nearest_index] = False
-            remaining_points = remaining_points[mask]
-            current_point = nearest_point
+                # Vectorized check for unvisited neighbors
+                unvisited_mask = ~visited[indices]
+
+                if np.any(unvisited_mask):
+                    # Find first unvisited neighbor (smallest distance)
+                    first_unvisited_pos = np.argmax(unvisited_mask)
+                    nearest_idx = indices[first_unvisited_pos]
+                    nearest_distance = distances[first_unvisited_pos]
+
+                    # Mark as visited and add to path
+                    visited[nearest_idx] = True
+                    point_collection.append(points[nearest_idx])
+                    distance_collection.append(nearest_distance)
+                    current_idx = nearest_idx
+                    found = True
+                else:
+                    # All k neighbors visited - expand search
+                    k = min(k * 2, points.shape[0])
+
+            if not found:
+                # Shouldn't happen, but handle gracefully
+                break
 
         return np.array(point_collection), np.array(distance_collection)
 
