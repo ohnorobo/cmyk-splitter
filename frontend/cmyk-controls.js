@@ -14,11 +14,11 @@ window.cmykParams = {
   threshold_y: 90,
   threshold_k: 128,
 
-  // Processing parameters
-  divisor_c: 50,
-  divisor_m: 50,
-  divisor_y: 50,
-  divisor_k: 25,
+  // Density parameters (10-200, higher = more dense)
+  density_c: 160,
+  density_m: 160,
+  density_y: 160,
+  density_k: 185,
   skip_paths_longer_than: 25,
 
   // Stroke width parameters
@@ -44,10 +44,10 @@ window.cmykParams = {
       cmykParams.threshold_m === 128 &&
       cmykParams.threshold_y === 90 &&
       cmykParams.threshold_k === 128 &&
-      cmykParams.divisor_c === 50 &&
-      cmykParams.divisor_m === 50 &&
-      cmykParams.divisor_y === 50 &&
-      cmykParams.divisor_k === 25 &&
+      cmykParams.density_c === 160 &&
+      cmykParams.density_m === 160 &&
+      cmykParams.density_y === 160 &&
+      cmykParams.density_k === 185 &&
       cmykParams.skip_paths_longer_than === 25
     );
 
@@ -80,10 +80,10 @@ function setupCMYKGUI() {
   gui.add(cmykParams, 'threshold_m', 0, 255, 1).name('Magenta Threshold');
   gui.add(cmykParams, 'threshold_y', 0, 255, 1).name('Yellow Threshold');
   gui.add(cmykParams, 'threshold_k', 0, 255, 1).name('Black Threshold');
-  gui.add(cmykParams, 'divisor_c', 10, 200, 1).name('Cyan Divisor');
-  gui.add(cmykParams, 'divisor_m', 10, 200, 1).name('Magenta Divisor');
-  gui.add(cmykParams, 'divisor_y', 10, 200, 1).name('Yellow Divisor');
-  gui.add(cmykParams, 'divisor_k', 10, 200, 1).name('Black Divisor');
+  gui.add(cmykParams, 'density_c', 10, 200, 1).name('Cyan Density');
+  gui.add(cmykParams, 'density_m', 10, 200, 1).name('Magenta Density');
+  gui.add(cmykParams, 'density_y', 10, 200, 1).name('Yellow Density');
+  gui.add(cmykParams, 'density_k', 10, 200, 1).name('Black Density');
   gui.add(cmykParams, 'skip_paths_longer_than', 5, 100, 1).name('Skip Paths >');
   gui.add(cmykParams, 'reprocess').name('🔄 Reprocess');
   gui.add(cmykParams, 'width_c', 0.1, 50, 0.5).name('Cyan Width')
@@ -222,10 +222,11 @@ async function processImage(file) {
       threshold_m: cmykParams.threshold_m,
       threshold_y: cmykParams.threshold_y,
       threshold_k: cmykParams.threshold_k,
-      divisor_c: cmykParams.divisor_c,
-      divisor_m: cmykParams.divisor_m,
-      divisor_y: cmykParams.divisor_y,
-      divisor_k: cmykParams.divisor_k,
+      // Convert density to divisor (invert: higher density = lower divisor)
+      divisor_c: 210 - cmykParams.density_c,
+      divisor_m: 210 - cmykParams.density_m,
+      divisor_y: 210 - cmykParams.density_y,
+      divisor_k: 210 - cmykParams.density_k,
       skip_paths_longer_than: cmykParams.skip_paths_longer_than
     };
 
