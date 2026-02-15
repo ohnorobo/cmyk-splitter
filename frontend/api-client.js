@@ -21,6 +21,10 @@ class CMYKAPIClient {
    *
    * @param {File} imageFile - The image file to process
    * @param {Object} params - Processing parameters
+   * @param {number} params.threshold_c - Cyan threshold 0-255 (default: 127)
+   * @param {number} params.threshold_m - Magenta threshold 0-255 (default: 127)
+   * @param {number} params.threshold_y - Yellow threshold 0-255 (default: 165)
+   * @param {number} params.threshold_k - Black threshold 0-255 (default: 127)
    * @param {number} params.divisor_c - Cyan channel divisor (default: 50)
    * @param {number} params.divisor_m - Magenta channel divisor (default: 50)
    * @param {number} params.divisor_y - Yellow channel divisor (default: 50)
@@ -32,6 +36,10 @@ class CMYKAPIClient {
     // Build FormData with file and parameters
     const formData = new FormData();
     formData.append('image', imageFile);
+    formData.append('threshold_c', params.threshold_c !== undefined ? params.threshold_c : 128);
+    formData.append('threshold_m', params.threshold_m !== undefined ? params.threshold_m : 128);
+    formData.append('threshold_y', params.threshold_y !== undefined ? params.threshold_y : 90);
+    formData.append('threshold_k', params.threshold_k !== undefined ? params.threshold_k : 128);
     formData.append('divisor_c', params.divisor_c || 50);
     formData.append('divisor_m', params.divisor_m || 50);
     formData.append('divisor_y', params.divisor_y || 50);

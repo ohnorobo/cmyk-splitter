@@ -74,17 +74,41 @@ class CMYKSplitter:
         return c_img, m_img, y_img, k_img
 
     @staticmethod
-    def split_channels(image: Image.Image) -> Dict[str, Image.Image]:
+    def split_channels(
+        image: Image.Image,
+        threshold_c: int = None,
+        threshold_m: int = None,
+        threshold_y: int = None,
+        threshold_k: int = None
+    ) -> Dict[str, Image.Image]:
         """
         Split an RGB image into CMYK channels and apply thresholds.
 
         Args:
             image: PIL Image in RGB mode
+            threshold_c: Cyan threshold (0-255), higher = more ink, defaults to class constant
+            threshold_m: Magenta threshold (0-255), higher = more ink, defaults to class constant
+            threshold_y: Yellow threshold (0-255), higher = more ink, defaults to class constant
+            threshold_k: Black threshold (0-255), higher = more ink, defaults to class constant
 
         Returns:
             Dictionary with keys 'cyan', 'magenta', 'yellow', 'black'
             All returned images are mode '1' (bilevel/monochrome)
         """
+        # Use provided thresholds or fall back to class defaults
+        threshold_c = threshold_c if threshold_c is not None else CMYKSplitter.THRESHOLD_C
+        threshold_m = threshold_m if threshold_m is not None else CMYKSplitter.THRESHOLD_M
+        threshold_y = threshold_y if threshold_y is not None else CMYKSplitter.THRESHOLD_Y
+        threshold_k = threshold_k if threshold_k is not None else CMYKSplitter.THRESHOLD_K
+
+        # Invert thresholds to make higher values = more ink (more intuitive)
+        # User provides 0-255 where higher = more ink
+        # We convert to CMYK space where lower = more ink
+        threshold_c = 255 - threshold_c
+        threshold_m = 255 - threshold_m
+        threshold_y = 255 - threshold_y
+        threshold_k = 255 - threshold_k
+
         # Convert to RGB if not already
         if image.mode != 'RGB':
             image = image.convert('RGB')
@@ -95,10 +119,10 @@ class CMYKSplitter:
         # Apply thresholds to create bilevel images
         # In CMYK mode, 0 = full ink, 255 = no ink
         # So we invert the comparison: values < threshold get ink (black)
-        cyan_bilevel = c.point(lambda x: 0 if x < CMYKSplitter.THRESHOLD_C else 255, mode='1')
-        magenta_bilevel = m.point(lambda x: 0 if x < CMYKSplitter.THRESHOLD_M else 255, mode='1')
-        yellow_bilevel = y.point(lambda x: 0 if x < CMYKSplitter.THRESHOLD_Y else 255, mode='1')
-        black_bilevel = k.point(lambda x: 0 if x < CMYKSplitter.THRESHOLD_K else 255, mode='1')
+        cyan_bilevel = c.point(lambda x: 0 if x < threshold_c else 255, mode='1')
+        magenta_bilevel = m.point(lambda x: 0 if x < threshold_m else 255, mode='1')
+        yellow_bilevel = y.point(lambda x: 0 if x < threshold_y else 255, mode='1')
+        black_bilevel = k.point(lambda x: 0 if x < threshold_k else 255, mode='1')
 
         return {
             'cyan': cyan_bilevel,

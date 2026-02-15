@@ -54,6 +54,10 @@ def process_image_to_svg(
     divisor_y: int = 50,
     divisor_k: int = 25,
     skip_paths_longer_than: int = 25,
+    threshold_c: int = 128,
+    threshold_m: int = 128,
+    threshold_y: int = 90,
+    threshold_k: int = 128,
 ) -> Dict:
     """
     Process a PIL Image into CMYK stringy SVG layers.
@@ -65,6 +69,10 @@ def process_image_to_svg(
         divisor_y: Sampling divisor for yellow channel (default: 50)
         divisor_k: Sampling divisor for black channel (default: 25)
         skip_paths_longer_than: Max distance for continuous lines (default: 25)
+        threshold_c: Cyan threshold 0-255, higher = more ink (default: 128)
+        threshold_m: Magenta threshold 0-255, higher = more ink (default: 128)
+        threshold_y: Yellow threshold 0-255, higher = more ink (default: 90)
+        threshold_k: Black threshold 0-255, higher = more ink (default: 128)
 
     Returns:
         Dict with combined_svg and metadata
@@ -84,7 +92,13 @@ def process_image_to_svg(
 
     # Split into CMYK channels (with thresholding)
     splitter = CMYKSplitter()
-    channels = splitter.split_channels(pil_image)
+    channels = splitter.split_channels(
+        pil_image,
+        threshold_c=threshold_c,
+        threshold_m=threshold_m,
+        threshold_y=threshold_y,
+        threshold_k=threshold_k
+    )
 
     # Debug: Save raw CMYK channels and bilevel images
     if DEBUG:

@@ -18,6 +18,10 @@ async def process_image(
     divisor_y: int = Form(50),
     divisor_k: int = Form(25),
     skip_paths_longer_than: int = Form(25),
+    threshold_c: int = Form(128),
+    threshold_m: int = Form(128),
+    threshold_y: int = Form(90),
+    threshold_k: int = Form(128),
 ):
     """
     Process an uploaded image into CMYK stringy SVG layers.
@@ -29,6 +33,10 @@ async def process_image(
         divisor_y: Sampling divisor for yellow channel (default: 50)
         divisor_k: Sampling divisor for black channel (default: 25)
         skip_paths_longer_than: Max distance for continuous lines (default: 25)
+        threshold_c: Cyan threshold 0-255, higher = more ink (default: 128)
+        threshold_m: Magenta threshold 0-255, higher = more ink (default: 128)
+        threshold_y: Yellow threshold 0-255, higher = more ink (default: 90)
+        threshold_k: Black threshold 0-255, higher = more ink (default: 128)
 
     Returns:
         JSON response with SVG strings for each CMYK channel
@@ -50,7 +58,11 @@ async def process_image(
             divisor_m=divisor_m,
             divisor_y=divisor_y,
             divisor_k=divisor_k,
-            skip_paths_longer_than=skip_paths_longer_than
+            skip_paths_longer_than=skip_paths_longer_than,
+            threshold_c=threshold_c,
+            threshold_m=threshold_m,
+            threshold_y=threshold_y,
+            threshold_k=threshold_k
         )
 
         # Log completion

@@ -8,6 +8,12 @@ window.apiClient = null;
 
 // CMYK parameters
 window.cmykParams = {
+  // Threshold parameters (0-255, higher = more ink)
+  threshold_c: 128,
+  threshold_m: 128,
+  threshold_y: 90,
+  threshold_k: 128,
+
   // Processing parameters
   divisor_c: 50,
   divisor_m: 50,
@@ -34,6 +40,10 @@ window.cmykParams = {
     // Check if this is urn.png with default parameters
     const isUrnPng = window.currentImageFile.name === 'urn.png';
     const hasDefaultParams = (
+      cmykParams.threshold_c === 128 &&
+      cmykParams.threshold_m === 128 &&
+      cmykParams.threshold_y === 90 &&
+      cmykParams.threshold_k === 128 &&
       cmykParams.divisor_c === 50 &&
       cmykParams.divisor_m === 50 &&
       cmykParams.divisor_y === 50 &&
@@ -66,6 +76,10 @@ function setupCMYKGUI() {
 
   // All controls at top level
   gui.add(cmykParams, 'uploadImage').name('📁 Select Image');
+  gui.add(cmykParams, 'threshold_c', 0, 255, 1).name('Cyan Threshold');
+  gui.add(cmykParams, 'threshold_m', 0, 255, 1).name('Magenta Threshold');
+  gui.add(cmykParams, 'threshold_y', 0, 255, 1).name('Yellow Threshold');
+  gui.add(cmykParams, 'threshold_k', 0, 255, 1).name('Black Threshold');
   gui.add(cmykParams, 'divisor_c', 10, 200, 1).name('Cyan Divisor');
   gui.add(cmykParams, 'divisor_m', 10, 200, 1).name('Magenta Divisor');
   gui.add(cmykParams, 'divisor_y', 10, 200, 1).name('Yellow Divisor');
@@ -204,6 +218,10 @@ async function processImage(file) {
 
   try {
     const params = {
+      threshold_c: cmykParams.threshold_c,
+      threshold_m: cmykParams.threshold_m,
+      threshold_y: cmykParams.threshold_y,
+      threshold_k: cmykParams.threshold_k,
       divisor_c: cmykParams.divisor_c,
       divisor_m: cmykParams.divisor_m,
       divisor_y: cmykParams.divisor_y,
