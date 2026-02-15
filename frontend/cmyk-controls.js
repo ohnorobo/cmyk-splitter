@@ -76,35 +76,35 @@ function setupCMYKGUI() {
 
   // All controls at top level
   gui.add(cmykParams, 'uploadImage').name('📁 Select Image');
-  gui.add(cmykParams, 'threshold_c', 0, 255, 1).name('Cyan Threshold');
-  gui.add(cmykParams, 'threshold_m', 0, 255, 1).name('Magenta Threshold');
-  gui.add(cmykParams, 'threshold_y', 0, 255, 1).name('Yellow Threshold');
-  gui.add(cmykParams, 'threshold_k', 0, 255, 1).name('Black Threshold');
-  gui.add(cmykParams, 'density_c', 10, 200, 1).name('Cyan Density');
-  gui.add(cmykParams, 'density_m', 10, 200, 1).name('Magenta Density');
-  gui.add(cmykParams, 'density_y', 10, 200, 1).name('Yellow Density');
-  gui.add(cmykParams, 'density_k', 10, 200, 1).name('Black Density');
+  gui.add(cmykParams, 'threshold_c', 0, 255, 1).name('C Threshold');
+  gui.add(cmykParams, 'threshold_m', 0, 255, 1).name('M Threshold');
+  gui.add(cmykParams, 'threshold_y', 0, 255, 1).name('Y Threshold');
+  gui.add(cmykParams, 'threshold_k', 0, 255, 1).name('K Threshold');
+  gui.add(cmykParams, 'density_c', 10, 200, 1).name('C Density');
+  gui.add(cmykParams, 'density_m', 10, 200, 1).name('M Density');
+  gui.add(cmykParams, 'density_y', 10, 200, 1).name('Y Density');
+  gui.add(cmykParams, 'density_k', 10, 200, 1).name('K Density');
   gui.add(cmykParams, 'skip_paths_longer_than', 5, 100, 1).name('Skip Paths >');
   gui.add(cmykParams, 'reprocess').name('🔄 Reprocess');
-  gui.add(cmykParams, 'width_c', 0.1, 50, 0.5).name('Cyan Width')
+  gui.add(cmykParams, 'width_c', 0.1, 50, 0.5).name('C Width')
     .onChange(() => {
       if (typeof updateStrokeWidths === 'function') {
         updateStrokeWidths();
       }
     });
-  gui.add(cmykParams, 'width_m', 0.1, 50, 0.5).name('Magenta Width')
+  gui.add(cmykParams, 'width_m', 0.1, 50, 0.5).name('M Width')
     .onChange(() => {
       if (typeof updateStrokeWidths === 'function') {
         updateStrokeWidths();
       }
     });
-  gui.add(cmykParams, 'width_y', 0.1, 50, 0.5).name('Yellow Width')
+  gui.add(cmykParams, 'width_y', 0.1, 50, 0.5).name('Y Width')
     .onChange(() => {
       if (typeof updateStrokeWidths === 'function') {
         updateStrokeWidths();
       }
     });
-  gui.add(cmykParams, 'width_k', 0.1, 50, 0.5).name('Black Width')
+  gui.add(cmykParams, 'width_k', 0.1, 50, 0.5).name('K Width')
     .onChange(() => {
       if (typeof updateStrokeWidths === 'function') {
         updateStrokeWidths();
