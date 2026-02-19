@@ -249,10 +249,38 @@ async function processImage(file) {
 /**
  * Show status message
  */
+let statusAnimationInterval = null;
+
 function showStatus(message, type = '') {
   const statusDiv = document.getElementById('status-message');
-  statusDiv.textContent = message;
+
+  // Clear any existing animation
+  if (statusAnimationInterval) {
+    clearInterval(statusAnimationInterval);
+    statusAnimationInterval = null;
+  }
+
   statusDiv.className = type;
+
+  // Animate dots for processing status
+  if (type === 'processing' && message.includes('...')) {
+    const baseMessage = message.replace('...', '');
+    // Use non-breaking spaces (\u00A0) to prevent HTML from trimming trailing spaces
+    const dotPatterns = [ // ".  ", " . ", "  ."
+      '.\u00A0\u00A0',
+      '\u00A0.\u00A0',
+      '\u00A0\u00A0.'];
+    let patternIndex = 0;
+
+    statusDiv.textContent = baseMessage + dotPatterns[0];
+
+    statusAnimationInterval = setInterval(() => {
+      patternIndex = (patternIndex + 1) % dotPatterns.length;
+      statusDiv.textContent = baseMessage + dotPatterns[patternIndex];
+    }, 400);
+  } else {
+    statusDiv.textContent = message;
+  }
 }
 
 // Initialize when DOM is ready
