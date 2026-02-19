@@ -3,11 +3,9 @@
  */
 
 class CMYKAPIClient {
-  constructor(baseURL = null) {
+  constructor() {
     // Auto-detect backend based on environment
-    if (baseURL) {
-      this.baseURL = baseURL;
-    } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       // Running locally
       this.baseURL = 'http://localhost:8000';
     } else {

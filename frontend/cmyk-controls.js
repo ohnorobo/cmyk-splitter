@@ -117,8 +117,8 @@ function setupCMYKGUI() {
  * Initialize API client and file upload handler
  */
 function initializeCMYKControls() {
-  // Create API client
-  window.apiClient = new CMYKAPIClient('http://localhost:8000');
+  // Create API client (auto-detects environment)
+  window.apiClient = new CMYKAPIClient();
 
   // Set up file upload handler
   const fileInput = document.getElementById('image-upload');
