@@ -8,16 +8,26 @@ body {
     height: 100vh;
   }
   
-/* CMYK container centered */
+/* CMYK container - spans from header to bottom of viewport */
 #cmyk-container {
+    position: fixed;
+    top: 50px;
+    left: 0;
+    right: 0;
+    bottom: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 20px auto;
+    z-index: 0;
+    overflow: hidden;
 }
 
 #cmyk-container svg {
     display: block;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -42,6 +52,7 @@ header h1 {
     position: absolute;
     top: 47.5px;
     right: 5px;
+    z-index: 10;
 }
 
 /* Upload section */
@@ -55,6 +66,7 @@ header h1 {
     width: 250px;
     min-height: 280px;
     font-family: sans-serif;
+    z-index: 10;
 }
 
 /* File input styling - hidden, triggered by GUI button */
