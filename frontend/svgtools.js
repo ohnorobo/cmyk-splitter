@@ -4,25 +4,58 @@
  * @param {string} filename - Output filename
  */
 function exportCombinedCMYK(result, filename) {
-  // Get the SVG that's already displayed
-  const svgElement = document.querySelector('#cmyk-container svg');
-
-  if (!svgElement) {
-    console.error('No SVG found to export');
+  if (!window.cmykData || !window.cmykData.result) {
+    console.error('No CMYK data to export');
     return;
   }
 
-  // Clone it to reset any display-specific attributes
-  const exportSvg = svgElement.cloneNode(true);
+  // Start from the original combined_svg string to preserve Inkscape
+  // namespace attributes (inkscape:groupmode, inkscape:label) that get
+  // stripped when the browser DOM round-trips the SVG.
+  let source = window.cmykData.result.combined_svg;
 
-  // Reset to original dimensions (from metadata)
+  // Apply current stroke widths from the UI by replacing stroke-width
+  // values in the raw SVG string for each layer
+  const widthMap = {
+    'cyan-layer': window.cmykParams.width_c,
+    'magenta-layer': window.cmykParams.width_m,
+    'yellow-layer': window.cmykParams.width_y,
+    'black-layer': window.cmykParams.width_k
+  };
+
+  for (const [layerId, width] of Object.entries(widthMap)) {
+    // Find the layer's section and update stroke-width in its paths
+    const layerRegex = new RegExp(
+      `(id="${layerId}"[^>]*>)([\\s\\S]*?)(<\\/g>)`,
+    );
+    source = source.replace(layerRegex, (match, open, content, close) => {
+      const updatedContent = content.replace(
+        /stroke-width="[^"]*"/g,
+        `stroke-width="${width}"`
+      );
+      return open + updatedContent + close;
+    });
+  }
+
+  // Update dimensions to physical units
   const metadata = window.cmykData.result.metadata;
-  exportSvg.setAttribute('width', metadata.original_dimensions[0]);
-  exportSvg.setAttribute('height', metadata.original_dimensions[1]);
+  const processingDims = metadata.processing_dimensions || metadata.original_dimensions;
+  let widthAttr, heightAttr;
+  if (metadata.physical_dimensions_mm) {
+    widthAttr = metadata.physical_dimensions_mm[0] + 'mm';
+    heightAttr = metadata.physical_dimensions_mm[1] + 'mm';
+  } else {
+    const scale = Math.min(210 / processingDims[0], 297 / processingDims[1]);
+    widthAttr = Math.round(processingDims[0] * scale * 100) / 100 + 'mm';
+    heightAttr = Math.round(processingDims[1] * scale * 100) / 100 + 'mm';
+  }
+  source = source.replace(/width="[^"]*"/, `width="${widthAttr}"`);
+  source = source.replace(/height="[^"]*"/, `height="${heightAttr}"`);
 
-  // Serialize and download
-  const serializer = new XMLSerializer();
-  const source = serializer.serializeToString(exportSvg);
+  // Ensure viewBox matches processing coordinate space
+  const vbAttr = `0 0 ${processingDims[0]} ${processingDims[1]}`;
+  source = source.replace(/viewBox="[^"]*"/, `viewBox="${vbAttr}"`);
+
   downloadSVG(source, filename);
 }
 

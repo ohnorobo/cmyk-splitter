@@ -80,7 +80,23 @@ def process_image_to_svg(
     # Store original dimensions
     original_width, original_height = pil_image.size
 
-    print(f"Processing image: {original_width}x{original_height}")
+    # Extract DPI from image metadata
+    dpi = pil_image.info.get('dpi', None)
+
+    if dpi and dpi[0] > 0 and dpi[1] > 0:
+        # Use actual DPI to calculate physical dimensions
+        dpi_x, dpi_y = dpi
+        physical_width_mm = round(original_width / dpi_x * 25.4, 2)
+        physical_height_mm = round(original_height / dpi_y * 25.4, 2)
+        print(f"Processing image: {original_width}x{original_height} @ {dpi_x}x{dpi_y} DPI ({physical_width_mm}x{physical_height_mm}mm)")
+    else:
+        # No DPI info: fit within A4 (210x297mm) maintaining aspect ratio
+        dpi_x, dpi_y = 0, 0
+        A4_WIDTH_MM, A4_HEIGHT_MM = 210, 297
+        scale = min(A4_WIDTH_MM / original_width, A4_HEIGHT_MM / original_height)
+        physical_width_mm = round(original_width * scale, 2)
+        physical_height_mm = round(original_height * scale, 2)
+        print(f"Processing image: {original_width}x{original_height}, no DPI info, fit to A4 ({physical_width_mm}x{physical_height_mm}mm)")
 
     # Convert to RGB if not already
     if pil_image.mode != 'RGB':
@@ -152,14 +168,16 @@ def process_image_to_svg(
             print(f"  SVG length: {len(svg_string)} chars")
 
     # Combine all channel SVGs into a single layered SVG
-    # Use processing dimensions (resized) for the SVG
+    # Use processing dimensions for viewBox coordinates, physical dimensions for size
     combined_svg = SVGCombiner.combine_cmyk_layers(
         cyan_svg=svg_results["cyan_svg"],
         magenta_svg=svg_results["magenta_svg"],
         yellow_svg=svg_results["yellow_svg"],
         black_svg=svg_results["black_svg"],
         width=processing_width,
-        height=processing_height
+        height=processing_height,
+        physical_width_mm=physical_width_mm,
+        physical_height_mm=physical_height_mm
     )
 
     if DEBUG:
@@ -169,6 +187,8 @@ def process_image_to_svg(
         "combined_svg": combined_svg,
         "metadata": {
             "original_dimensions": [original_width, original_height],
-            "processing_dimensions": [processing_width, processing_height]
+            "processing_dimensions": [processing_width, processing_height],
+            "physical_dimensions_mm": [physical_width_mm, physical_height_mm],
+            "dpi": [dpi_x, dpi_y]
         },
     }

@@ -3,6 +3,13 @@
 from xml.etree import ElementTree as ET
 
 
+# Register Inkscape/Sodipodi namespaces so they appear in output
+ET.register_namespace('inkscape', 'http://www.inkscape.org/namespaces/inkscape')
+ET.register_namespace('sodipodi', 'http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd')
+
+INKSCAPE_NS = 'http://www.inkscape.org/namespaces/inkscape'
+
+
 class SVGCombiner:
     """Combines multiple channel SVGs into a single layered SVG with proper colors and groups."""
 
@@ -14,6 +21,14 @@ class SVGCombiner:
         "black": "rgb(0, 0, 0)",
     }
 
+    # Layer labels matching the working file convention (number + letter)
+    CHANNEL_LABELS = {
+        "cyan": "1 C",
+        "magenta": "2 M",
+        "yellow": "3 Y",
+        "black": "4 K",
+    }
+
     @staticmethod
     def combine_cmyk_layers(
         cyan_svg: str,
@@ -21,45 +36,38 @@ class SVGCombiner:
         yellow_svg: str,
         black_svg: str,
         width: int,
-        height: int
+        height: int,
+        physical_width_mm: float = None,
+        physical_height_mm: float = None
     ) -> str:
         """
-        Combine 4 channel SVGs into a single SVG with named groups.
+        Combine 4 channel SVGs into a single SVG with Inkscape-compatible layers.
 
         Args:
             cyan_svg: SVG string for cyan channel
             magenta_svg: SVG string for magenta channel
             yellow_svg: SVG string for yellow channel
             black_svg: SVG string for black channel
-            width: Width of the output SVG
-            height: Height of the output SVG
+            width: Width of the output SVG in pixels (used for viewBox)
+            height: Height of the output SVG in pixels (used for viewBox)
+            physical_width_mm: Physical width in mm (used for width attribute)
+            physical_height_mm: Physical height in mm (used for height attribute)
 
         Returns:
-            Combined SVG string with structure:
-            <svg width="..." height="..." xmlns="...">
-              <g id="cyan-layer" style="mix-blend-mode: multiply;">
-                <circle... fill="rgb(0, 255, 255)" />
-                ...
-              </g>
-              <g id="magenta-layer" style="mix-blend-mode: multiply;">
-                <circle... fill="rgb(255, 0, 255)" />
-                ...
-              </g>
-              <g id="yellow-layer" style="mix-blend-mode: multiply;">
-                <circle... fill="rgb(255, 255, 0)" />
-                ...
-              </g>
-              <g id="black-layer" style="mix-blend-mode: multiply;">
-                <circle... fill="rgb(0, 0, 0)" />
-                ...
-              </g>
-            </svg>
+            Combined SVG string with Inkscape-compatible layer structure
         """
         # Create root SVG element
         svg_root = ET.Element('svg')
-        svg_root.set('width', str(width))
-        svg_root.set('height', str(height))
         svg_root.set('xmlns', 'http://www.w3.org/2000/svg')
+
+        if physical_width_mm is not None and physical_height_mm is not None:
+            svg_root.set('width', f'{physical_width_mm}mm')
+            svg_root.set('height', f'{physical_height_mm}mm')
+        else:
+            svg_root.set('width', str(width))
+            svg_root.set('height', str(height))
+
+        svg_root.set('viewBox', f'0 0 {width} {height}')
 
         # Process each channel
         channels = [
@@ -77,9 +85,11 @@ class SVGCombiner:
                 print(f"Error parsing {channel_name} SVG: {e}")
                 continue
 
-            # Create group for this channel
+            # Create Inkscape-compatible layer group
             group = ET.SubElement(svg_root, 'g')
             group.set('id', f'{channel_name}-layer')
+            group.set(f'{{{INKSCAPE_NS}}}groupmode', 'layer')
+            group.set(f'{{{INKSCAPE_NS}}}label', SVGCombiner.CHANNEL_LABELS[channel_name])
             group.set('style', 'mix-blend-mode: multiply;')
 
             # Extract all circles from the channel SVG (HalftoneDotPlotter)
